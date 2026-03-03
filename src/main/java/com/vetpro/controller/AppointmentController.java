@@ -53,8 +53,9 @@ public class AppointmentController {
     @PutMapping("/{id}")
     public ResponseEntity<Appointment> updateAppointment(@PathVariable Long id,
                                                          @Valid @RequestBody Appointment appointment) {
-        Appointment updated = appointmentService.updateAppointment(id, appointment);
-        return ResponseEntity.ok(updated);
+        return appointmentService.getAppointmentById(id)
+                .map(existing -> ResponseEntity.ok(appointmentService.updateAppointment(id, appointment)))
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{id}/cancel")
