@@ -24,17 +24,6 @@ def create_invoice(
     return invoice
 
 
-@router.get("/{invoice_id}", response_model=InvoiceResponse)
-def get_invoice(
-    invoice_id: int,
-    db: Annotated[Session, Depends(get_db)],
-) -> Invoice:
-    invoice = db.get(Invoice, invoice_id)
-    if invoice is None:
-        raise HTTPException(status_code=404, detail="Invoice not found")
-    return invoice
-
-
 @router.get("/owner/{owner_id}", response_model=list[InvoiceResponse])
 def get_invoices_by_owner(
     owner_id: int,
@@ -48,6 +37,17 @@ def get_unpaid_invoices(
     db: Annotated[Session, Depends(get_db)],
 ) -> list[Invoice]:
     return db.query(Invoice).filter(Invoice.paid == False).all()  # noqa: E712
+
+
+@router.get("/{invoice_id}", response_model=InvoiceResponse)
+def get_invoice(
+    invoice_id: int,
+    db: Annotated[Session, Depends(get_db)],
+) -> Invoice:
+    invoice = db.get(Invoice, invoice_id)
+    if invoice is None:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    return invoice
 
 
 @router.put("/{invoice_id}/pay", response_model=InvoiceResponse)

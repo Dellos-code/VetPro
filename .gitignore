@@ -1,26 +1,25 @@
-# Maven
-target/
-!.mvn/wrapper/maven-wrapper.jar
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+*.egg-info/
+*.egg
+dist/
+build/
+venv/
+.venv/
+env/
 
-# Java
-*.class
-*.jar
-*.war
-*.ear
-
-# IDE - IntelliJ
+# IDE
 .idea/
 *.iml
-out/
-
-# IDE - Eclipse
+.vscode/
 .settings/
 .project
 .classpath
+out/
 bin/
-
-# IDE - VS Code
-.vscode/
 
 # OS
 .DS_Store
@@ -29,12 +28,8 @@ Thumbs.db
 # Logs
 *.log
 
-# H2 Database files
+# SQLite database
 *.db
 
-# Python
-__pycache__/
-*.pyc
-*.pyo
-.pytest_cache/
-*.egg-info/
+# Environment
+.env

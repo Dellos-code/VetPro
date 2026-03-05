@@ -1,25 +1,40 @@
 # VetPro — Veterinary Clinic Management System
 
 > Advanced veterinary clinic management platform with heuristic scheduling
-> and stochastic inventory forecasting engines.
+> and stochastic inventory forecasting engines — written entirely in Python.
 
 ## Architecture
 
 ```
 VetPro/
-├── src/                         # Java Spring Boot backend (CRUD + REST API)
-│   └── main/java/com/vetpro/
-│       ├── model/               # JPA entities
-│       ├── repository/          # Spring Data repositories
-│       ├── service/             # Business logic
-│       ├── controller/          # REST controllers
-│       └── config/              # Security, auth
+├── app/                         # Python FastAPI backend (CRUD + REST API)
+│   ├── main.py                  # Application entry point
+│   ├── database.py              # SQLAlchemy database setup
+│   ├── models.py                # SQLAlchemy ORM models
+│   ├── schemas.py               # Pydantic request/response schemas
+│   ├── security.py              # Auth & role-based access control
+│   └── routers/                 # REST API route handlers
+│       ├── users.py
+│       ├── pets.py
+│       ├── appointments.py
+│       ├── medical_records.py
+│       ├── vaccines.py
+│       ├── vaccine_records.py
+│       ├── prescriptions.py
+│       ├── medications.py
+│       ├── invoices.py
+│       ├── payments.py
+│       ├── hospitalizations.py
+│       ├── reminders.py
+│       └── reports.py
 ├── engines/                     # Python algorithmic engines
 │   ├── scheduler_engine.py      # Heuristic appointment optimizer
 │   ├── inventory_engine.py      # Monte Carlo inventory forecaster
-│   ├── api.py                   # FastAPI REST wrapper
+│   ├── api.py                   # Engine-specific FastAPI routes
 │   └── tests/                   # Engine unit tests
-└── pom.xml
+├── tests/                       # Backend unit tests
+│   └── test_backend.py
+└── requirements.txt
 ```
 
 ## Roles
@@ -96,29 +111,39 @@ D_lead   = Σ_{t=1}^{L} Poisson(λ)        — compound demand during lead time
 
 ## Getting Started
 
-### Java Backend
+### Install Dependencies
 
 ```bash
-mvn clean compile
-mvn spring-boot:run          # starts on port 8080
+pip install -r requirements.txt
 ```
 
-### Python Engines
+### Run the Application
 
 ```bash
-pip install -r engines/requirements.txt
-uvicorn engines.api:app --port 8081    # starts on port 8081
+uvicorn app.main:app --port 8080 --reload
 ```
 
-### Run Engine Tests
+The API will be available at `http://localhost:8080`. Interactive API docs are
+served at `http://localhost:8080/docs`.
+
+### Run Tests
 
 ```bash
+# All tests (backend + engines)
+python -m pytest tests/ engines/tests/ -v
+
+# Backend tests only
+python -m pytest tests/ -v
+
+# Engine tests only
 python -m pytest engines/tests/ -v
 ```
 
 ## Technology Stack
 
-- **Backend**: Java 17, Spring Boot 3.2, Spring Security, Spring Data JPA
-- **Database**: H2 (development), PostgreSQL-ready
-- **Engines**: Python 3.12, NumPy, SciPy, FastAPI
+- **Backend**: Python 3.12, FastAPI, SQLAlchemy, Pydantic
+- **Database**: SQLite (development), PostgreSQL-ready
+- **Security**: HTTP Basic Auth, BCrypt password hashing, role-based access control
+- **Engines**: NumPy, SciPy, FastAPI
 - **Algorithms**: Greedy CSP + Local Search, Monte Carlo Simulation
+- **Testing**: pytest, httpx

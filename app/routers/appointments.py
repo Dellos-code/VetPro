@@ -33,17 +33,6 @@ def create_appointment(
     return appointment
 
 
-@router.get("/{appointment_id}", response_model=AppointmentResponse)
-def get_appointment(
-    appointment_id: int,
-    db: Annotated[Session, Depends(get_db)],
-) -> Appointment:
-    appointment = db.get(Appointment, appointment_id)
-    if appointment is None:
-        raise HTTPException(status_code=404, detail="Appointment not found")
-    return appointment
-
-
 @router.get("/pet/{pet_id}", response_model=list[AppointmentResponse])
 def get_appointments_by_pet(
     pet_id: int,
@@ -75,6 +64,17 @@ def get_appointments_by_range(
         .filter(Appointment.date_time >= start, Appointment.date_time <= end)
         .all()
     )
+
+
+@router.get("/{appointment_id}", response_model=AppointmentResponse)
+def get_appointment(
+    appointment_id: int,
+    db: Annotated[Session, Depends(get_db)],
+) -> Appointment:
+    appointment = db.get(Appointment, appointment_id)
+    if appointment is None:
+        raise HTTPException(status_code=404, detail="Appointment not found")
+    return appointment
 
 
 @router.put("/{appointment_id}", response_model=AppointmentResponse)

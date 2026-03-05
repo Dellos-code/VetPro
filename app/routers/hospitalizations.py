@@ -32,17 +32,6 @@ def admit_pet(
     return hospitalization
 
 
-@router.get("/{hospitalization_id}", response_model=HospitalizationResponse)
-def get_hospitalization(
-    hospitalization_id: int,
-    db: Annotated[Session, Depends(get_db)],
-) -> Hospitalization:
-    hosp = db.get(Hospitalization, hospitalization_id)
-    if hosp is None:
-        raise HTTPException(status_code=404, detail="Hospitalization not found")
-    return hosp
-
-
 @router.get("/pet/{pet_id}", response_model=list[HospitalizationResponse])
 def get_hospitalizations_by_pet(
     pet_id: int,
@@ -64,6 +53,17 @@ def get_current_hospitalizations(
         .filter(Hospitalization.status == "ADMITTED")
         .all()
     )
+
+
+@router.get("/{hospitalization_id}", response_model=HospitalizationResponse)
+def get_hospitalization(
+    hospitalization_id: int,
+    db: Annotated[Session, Depends(get_db)],
+) -> Hospitalization:
+    hosp = db.get(Hospitalization, hospitalization_id)
+    if hosp is None:
+        raise HTTPException(status_code=404, detail="Hospitalization not found")
+    return hosp
 
 
 @router.put(

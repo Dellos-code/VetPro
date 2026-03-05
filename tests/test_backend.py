@@ -388,10 +388,6 @@ class TestAppointments:
         assert resp.status_code == 200
         assert len(resp.json()) == 1
 
-    @pytest.mark.xfail(
-        reason="Route ordering bug: GET /{appointment_id} catches /range before the fixed path",
-        strict=True,
-    )
     def test_get_appointments_by_date_range(self):
         vet_auth, vet = _vet_auth()
         pet = _create_pet()
@@ -757,10 +753,6 @@ class TestInvoicesAndPayments:
         assert resp.status_code == 200
         assert len(resp.json()) == 2
 
-    @pytest.mark.xfail(
-        reason="Route ordering bug: GET /{invoice_id} catches /unpaid before the fixed path",
-        strict=True,
-    )
     def test_get_unpaid_invoices(self):
         owner = _create_user_in_db("inv_owner4", "p", Role.OWNER)
         _create_invoice(owner["id"])
@@ -895,10 +887,6 @@ class TestHospitalizations:
         assert data["status"] == "DISCHARGED"
         assert data["discharge_date"] is not None
 
-    @pytest.mark.xfail(
-        reason="Route ordering bug: GET /{hospitalization_id} catches /current before the fixed path",
-        strict=True,
-    )
     def test_get_current_hospitalizations(self):
         vet_auth, vet = _vet_auth()
         pet1 = _create_pet(name="Pet1", microchip_number="H-001")
