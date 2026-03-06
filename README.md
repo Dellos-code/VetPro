@@ -9,10 +9,25 @@
 VetPro/
 ├── app/                         # Python FastAPI backend (CRUD + REST API)
 │   ├── main.py                  # Application entry point
-│   ├── database.py              # SQLAlchemy database setup
-│   ├── models.py                # SQLAlchemy ORM models
-│   ├── schemas.py               # Pydantic request/response schemas
+│   ├── config.py                # pydantic-settings configuration
+│   ├── database.py              # SQLModel database setup
+│   ├── models.py                # SQLModel table models
+│   ├── schemas.py               # SQLModel request/response schemas
 │   ├── security.py              # Auth & role-based access control
+│   ├── services/                # Service layer (business logic)
+│   │   ├── user_service.py
+│   │   ├── pet_service.py
+│   │   ├── appointment_service.py
+│   │   ├── medical_record_service.py
+│   │   ├── vaccine_service.py
+│   │   ├── vaccine_record_service.py
+│   │   ├── medication_service.py
+│   │   ├── prescription_service.py
+│   │   ├── invoice_service.py
+│   │   ├── payment_service.py
+│   │   ├── hospitalization_service.py
+│   │   ├── reminder_service.py
+│   │   └── report_service.py
 │   └── routers/                 # REST API route handlers
 │       ├── users.py
 │       ├── pets.py
@@ -141,7 +156,7 @@ python -m pytest engines/tests/ -v
 
 ## Technology Stack
 
-- **Backend**: Python 3.12, FastAPI, SQLAlchemy, Pydantic
+- **Backend**: Python 3.12, FastAPI, SQLModel, pydantic-settings
 - **Database**: SQLite (development), PostgreSQL-ready
 - **Security**: HTTP Basic Auth, BCrypt password hashing, role-based access control
 - **Engines**: NumPy, SciPy, FastAPI

@@ -1,9 +1,7 @@
-from __future__ import annotations
-
 import enum
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Optional
+from typing import List, Optional
 
 from sqlalchemy import Column, Enum as SAEnum, Numeric
 from sqlmodel import Field, Relationship, SQLModel
@@ -51,8 +49,8 @@ class User(SQLModel, table=True):
     role: Role = Field(sa_column=Column(SAEnum(Role), nullable=False))
     enabled: bool = Field(default=True)
 
-    pets: list[Pet] = Relationship(back_populates="owner")
-    reminders: list[Reminder] = Relationship(back_populates="user")
+    pets: List["Pet"] = Relationship(back_populates="owner")
+    reminders: List["Reminder"] = Relationship(back_populates="user")
 
 
 class Pet(SQLModel, table=True):
@@ -67,12 +65,12 @@ class Pet(SQLModel, table=True):
     microchip_number: Optional[str] = Field(default=None, unique=True)
     owner_id: Optional[int] = Field(default=None, foreign_key="users.id")
 
-    owner: Optional[User] = Relationship(back_populates="pets")
-    medical_records: list[MedicalRecord] = Relationship(
+    owner: Optional["User"] = Relationship(back_populates="pets")
+    medical_records: List["MedicalRecord"] = Relationship(
         back_populates="pet",
         sa_relationship_kwargs={"cascade": "all, delete-orphan"},
     )
-    vaccine_records: list[VaccineRecord] = Relationship(
+    vaccine_records: List["VaccineRecord"] = Relationship(
         back_populates="pet",
         sa_relationship_kwargs={"cascade": "all, delete-orphan"},
     )
@@ -91,8 +89,8 @@ class Appointment(SQLModel, table=True):
     )
     notes: Optional[str] = Field(default=None)
 
-    pet: Pet = Relationship()
-    veterinarian: User = Relationship()
+    pet: Optional["Pet"] = Relationship()
+    veterinarian: Optional["User"] = Relationship()
 
 
 class MedicalRecord(SQLModel, table=True):
@@ -106,9 +104,9 @@ class MedicalRecord(SQLModel, table=True):
     treatment: Optional[str] = Field(default=None)
     notes: Optional[str] = Field(default=None)
 
-    pet: Pet = Relationship(back_populates="medical_records")
-    veterinarian: User = Relationship()
-    prescriptions: list[Prescription] = Relationship(
+    pet: Optional["Pet"] = Relationship(back_populates="medical_records")
+    veterinarian: Optional["User"] = Relationship()
+    prescriptions: List["Prescription"] = Relationship(
         back_populates="medical_record",
     )
 
@@ -133,9 +131,9 @@ class VaccineRecord(SQLModel, table=True):
     next_due_date: Optional[date] = Field(default=None)
     batch_number: Optional[str] = Field(default=None)
 
-    pet: Pet = Relationship(back_populates="vaccine_records")
-    vaccine: Vaccine = Relationship()
-    administered_by: User = Relationship()
+    pet: Optional["Pet"] = Relationship(back_populates="vaccine_records")
+    vaccine: Optional["Vaccine"] = Relationship()
+    administered_by: Optional["User"] = Relationship()
 
 
 class Medication(SQLModel, table=True):
@@ -165,10 +163,10 @@ class Prescription(SQLModel, table=True):
     duration_days: Optional[int] = Field(default=None)
     instructions: Optional[str] = Field(default=None)
 
-    medical_record: MedicalRecord = Relationship(
+    medical_record: Optional["MedicalRecord"] = Relationship(
         back_populates="prescriptions",
     )
-    medication: Medication = Relationship()
+    medication: Optional["Medication"] = Relationship()
 
 
 class Invoice(SQLModel, table=True):
@@ -186,9 +184,9 @@ class Invoice(SQLModel, table=True):
     paid: bool = Field(default=False)
     description: Optional[str] = Field(default=None)
 
-    owner: User = Relationship()
-    appointment: Optional[Appointment] = Relationship()
-    payments: list[Payment] = Relationship(back_populates="invoice")
+    owner: Optional["User"] = Relationship()
+    appointment: Optional["Appointment"] = Relationship()
+    payments: List["Payment"] = Relationship(back_populates="invoice")
 
 
 class Payment(SQLModel, table=True):
@@ -204,7 +202,7 @@ class Payment(SQLModel, table=True):
         sa_column=Column(SAEnum(PaymentMethod), nullable=False),
     )
 
-    invoice: Invoice = Relationship(back_populates="payments")
+    invoice: Optional["Invoice"] = Relationship(back_populates="payments")
 
 
 class Hospitalization(SQLModel, table=True):
@@ -219,8 +217,8 @@ class Hospitalization(SQLModel, table=True):
     status: Optional[str] = Field(default=None)
     daily_notes: Optional[str] = Field(default=None)
 
-    pet: Pet = Relationship()
-    veterinarian: User = Relationship()
+    pet: Optional["Pet"] = Relationship()
+    veterinarian: Optional["User"] = Relationship()
 
 
 class Reminder(SQLModel, table=True):
@@ -235,4 +233,4 @@ class Reminder(SQLModel, table=True):
         sa_column=Column(SAEnum(ReminderType), nullable=False),
     )
 
-    user: User = Relationship(back_populates="reminders")
+    user: Optional["User"] = Relationship(back_populates="reminders")
