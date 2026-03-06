@@ -4,8 +4,10 @@ from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
 
 from fastapi import FastAPI
+from sqlmodel import SQLModel
 
-from app.database import Base, engine
+from app.config import settings
+from app.database import engine
 from app.routers import (
     appointments,
     hospitalizations,
@@ -26,11 +28,15 @@ from engines.api import app as engine_app
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
-    Base.metadata.create_all(bind=engine)
+    SQLModel.metadata.create_all(engine)
     yield
 
 
-app = FastAPI(title="VetPro", version="1.0.0", lifespan=lifespan)
+app = FastAPI(
+    title=settings.APP_TITLE,
+    version=settings.APP_VERSION,
+    lifespan=lifespan,
+)
 
 # CRUD routers
 app.include_router(users.router)

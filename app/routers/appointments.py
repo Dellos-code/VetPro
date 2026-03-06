@@ -4,12 +4,13 @@ from datetime import datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy.orm import Session
+from sqlmodel import Session
 
 from app.database import get_db
-from app.models import Appointment, AppointmentStatus, Role
+from app.models import Appointment, Role
 from app.schemas import AppointmentCreate, AppointmentResponse
 from app.security import require_role
+from app.services.appointment_service import AppointmentService
 
 router = APIRouter(prefix="/api/appointments", tags=["appointments"])
 
@@ -26,11 +27,8 @@ def create_appointment(
     payload: AppointmentCreate,
     db: Annotated[Session, Depends(get_db)],
 ) -> Appointment:
-    appointment = Appointment(**payload.model_dump())
-    db.add(appointment)
-    db.commit()
-    db.refresh(appointment)
-    return appointment
+    svc = AppointmentService(db)
+    return svc.create(payload)
 
 
 @router.get("/pet/{pet_id}", response_model=list[AppointmentResponse])
@@ -38,7 +36,8 @@ def get_appointments_by_pet(
     pet_id: int,
     db: Annotated[Session, Depends(get_db)],
 ) -> list[Appointment]:
-    return db.query(Appointment).filter(Appointment.pet_id == pet_id).all()
+    svc = AppointmentService(db)
+    return svc.get_by_pet(pet_id)
 
 
 @router.get("/vet/{vet_id}", response_model=list[AppointmentResponse])
@@ -46,11 +45,8 @@ def get_appointments_by_vet(
     vet_id: int,
     db: Annotated[Session, Depends(get_db)],
 ) -> list[Appointment]:
-    return (
-        db.query(Appointment)
-        .filter(Appointment.veterinarian_id == vet_id)
-        .all()
-    )
+    svc = AppointmentService(db)
+    return svc.get_by_vet(vet_id)
 
 
 @router.get("/range", response_model=list[AppointmentResponse])
@@ -59,11 +55,8 @@ def get_appointments_by_range(
     end: Annotated[datetime, Query()],
     db: Annotated[Session, Depends(get_db)],
 ) -> list[Appointment]:
-    return (
-        db.query(Appointment)
-        .filter(Appointment.date_time >= start, Appointment.date_time <= end)
-        .all()
-    )
+    svc = AppointmentService(db)
+    return svc.get_by_range(start, end)
 
 
 @router.get("/{appointment_id}", response_model=AppointmentResponse)
@@ -71,7 +64,8 @@ def get_appointment(
     appointment_id: int,
     db: Annotated[Session, Depends(get_db)],
 ) -> Appointment:
-    appointment = db.get(Appointment, appointment_id)
+    svc = AppointmentService(db)
+    appointment = svc.get_by_id(appointment_id)
     if appointment is None:
         raise HTTPException(status_code=404, detail="Appointment not found")
     return appointment
@@ -83,14 +77,11 @@ def update_appointment(
     payload: AppointmentCreate,
     db: Annotated[Session, Depends(get_db)],
 ) -> Appointment:
-    appointment = db.get(Appointment, appointment_id)
+    svc = AppointmentService(db)
+    appointment = svc.get_by_id(appointment_id)
     if appointment is None:
         raise HTTPException(status_code=404, detail="Appointment not found")
-    for key, value in payload.model_dump().items():
-        setattr(appointment, key, value)
-    db.commit()
-    db.refresh(appointment)
-    return appointment
+    return svc.update(appointment, payload)
 
 
 @router.put("/{appointment_id}/cancel", response_model=AppointmentResponse)
@@ -98,13 +89,11 @@ def cancel_appointment(
     appointment_id: int,
     db: Annotated[Session, Depends(get_db)],
 ) -> Appointment:
-    appointment = db.get(Appointment, appointment_id)
+    svc = AppointmentService(db)
+    appointment = svc.get_by_id(appointment_id)
     if appointment is None:
         raise HTTPException(status_code=404, detail="Appointment not found")
-    appointment.status = AppointmentStatus.CANCELLED
-    db.commit()
-    db.refresh(appointment)
-    return appointment
+    return svc.cancel(appointment)
 
 
 @router.put("/{appointment_id}/complete", response_model=AppointmentResponse)
@@ -112,10 +101,8 @@ def complete_appointment(
     appointment_id: int,
     db: Annotated[Session, Depends(get_db)],
 ) -> Appointment:
-    appointment = db.get(Appointment, appointment_id)
+    svc = AppointmentService(db)
+    appointment = svc.get_by_id(appointment_id)
     if appointment is None:
         raise HTTPException(status_code=404, detail="Appointment not found")
-    appointment.status = AppointmentStatus.COMPLETED
-    db.commit()
-    db.refresh(appointment)
-    return appointment
+    return svc.complete(appointment)

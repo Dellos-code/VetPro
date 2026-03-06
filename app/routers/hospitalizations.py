@@ -1,15 +1,15 @@
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlmodel import Session
 
 from app.database import get_db
 from app.models import Hospitalization, Role
 from app.schemas import HospitalizationCreate, HospitalizationResponse
 from app.security import require_role
+from app.services.hospitalization_service import HospitalizationService
 
 router = APIRouter(prefix="/api/hospitalizations", tags=["hospitalizations"])
 
@@ -24,12 +24,8 @@ def admit_pet(
     payload: HospitalizationCreate,
     db: Annotated[Session, Depends(get_db)],
 ) -> Hospitalization:
-    hospitalization = Hospitalization(**payload.model_dump())
-    hospitalization.status = "ADMITTED"
-    db.add(hospitalization)
-    db.commit()
-    db.refresh(hospitalization)
-    return hospitalization
+    svc = HospitalizationService(db)
+    return svc.admit(payload)
 
 
 @router.get("/pet/{pet_id}", response_model=list[HospitalizationResponse])
@@ -37,22 +33,16 @@ def get_hospitalizations_by_pet(
     pet_id: int,
     db: Annotated[Session, Depends(get_db)],
 ) -> list[Hospitalization]:
-    return (
-        db.query(Hospitalization)
-        .filter(Hospitalization.pet_id == pet_id)
-        .all()
-    )
+    svc = HospitalizationService(db)
+    return svc.get_by_pet(pet_id)
 
 
 @router.get("/current", response_model=list[HospitalizationResponse])
 def get_current_hospitalizations(
     db: Annotated[Session, Depends(get_db)],
 ) -> list[Hospitalization]:
-    return (
-        db.query(Hospitalization)
-        .filter(Hospitalization.status == "ADMITTED")
-        .all()
-    )
+    svc = HospitalizationService(db)
+    return svc.get_current()
 
 
 @router.get("/{hospitalization_id}", response_model=HospitalizationResponse)
@@ -60,7 +50,8 @@ def get_hospitalization(
     hospitalization_id: int,
     db: Annotated[Session, Depends(get_db)],
 ) -> Hospitalization:
-    hosp = db.get(Hospitalization, hospitalization_id)
+    svc = HospitalizationService(db)
+    hosp = svc.get_by_id(hospitalization_id)
     if hosp is None:
         raise HTTPException(status_code=404, detail="Hospitalization not found")
     return hosp
@@ -75,14 +66,11 @@ def discharge_pet(
     hospitalization_id: int,
     db: Annotated[Session, Depends(get_db)],
 ) -> Hospitalization:
-    hosp = db.get(Hospitalization, hospitalization_id)
+    svc = HospitalizationService(db)
+    hosp = svc.get_by_id(hospitalization_id)
     if hosp is None:
         raise HTTPException(status_code=404, detail="Hospitalization not found")
-    hosp.discharge_date = datetime.now()
-    hosp.status = "DISCHARGED"
-    db.commit()
-    db.refresh(hosp)
-    return hosp
+    return svc.discharge(hosp)
 
 
 @router.put("/{hospitalization_id}/notes", response_model=HospitalizationResponse)
@@ -91,10 +79,8 @@ def update_daily_notes(
     notes: Annotated[str, Body()],
     db: Annotated[Session, Depends(get_db)],
 ) -> Hospitalization:
-    hosp = db.get(Hospitalization, hospitalization_id)
+    svc = HospitalizationService(db)
+    hosp = svc.get_by_id(hospitalization_id)
     if hosp is None:
         raise HTTPException(status_code=404, detail="Hospitalization not found")
-    hosp.daily_notes = notes
-    db.commit()
-    db.refresh(hosp)
-    return hosp
+    return svc.update_notes(hosp, notes)

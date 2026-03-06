@@ -5,7 +5,7 @@ from typing import Annotated
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from passlib.context import CryptContext
-from sqlalchemy.orm import Session
+from sqlmodel import Session, select
 
 from app.database import get_db
 from app.models import Role, User
@@ -27,7 +27,9 @@ def get_current_user(
     credentials: Annotated[HTTPBasicCredentials, Depends(security)],
     db: Annotated[Session, Depends(get_db)],
 ) -> User:
-    user = db.query(User).filter(User.username == credentials.username).first()
+    user = db.exec(
+        select(User).where(User.username == credentials.username)
+    ).first()
     if user is None or not verify_password(credentials.password, user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

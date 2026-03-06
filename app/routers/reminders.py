@@ -1,14 +1,14 @@
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlmodel import Session
 
 from app.database import get_db
 from app.models import Reminder
 from app.schemas import ReminderCreate, ReminderResponse
+from app.services.reminder_service import ReminderService
 
 router = APIRouter(prefix="/api/reminders", tags=["reminders"])
 
@@ -18,11 +18,8 @@ def create_reminder(
     payload: ReminderCreate,
     db: Annotated[Session, Depends(get_db)],
 ) -> Reminder:
-    reminder = Reminder(**payload.model_dump())
-    db.add(reminder)
-    db.commit()
-    db.refresh(reminder)
-    return reminder
+    svc = ReminderService(db)
+    return svc.create(payload)
 
 
 @router.get("/user/{user_id}", response_model=list[ReminderResponse])
@@ -30,18 +27,16 @@ def get_reminders_by_user(
     user_id: int,
     db: Annotated[Session, Depends(get_db)],
 ) -> list[Reminder]:
-    return db.query(Reminder).filter(Reminder.user_id == user_id).all()
+    svc = ReminderService(db)
+    return svc.get_by_user(user_id)
 
 
 @router.get("/pending", response_model=list[ReminderResponse])
 def get_pending_reminders(
     db: Annotated[Session, Depends(get_db)],
 ) -> list[Reminder]:
-    return (
-        db.query(Reminder)
-        .filter(Reminder.sent == False, Reminder.reminder_date < datetime.now())  # noqa: E712
-        .all()
-    )
+    svc = ReminderService(db)
+    return svc.get_pending()
 
 
 @router.put("/{reminder_id}/sent", response_model=ReminderResponse)
@@ -49,10 +44,8 @@ def mark_as_sent(
     reminder_id: int,
     db: Annotated[Session, Depends(get_db)],
 ) -> Reminder:
-    reminder = db.get(Reminder, reminder_id)
+    svc = ReminderService(db)
+    reminder = svc.db.get(Reminder, reminder_id)
     if reminder is None:
         raise HTTPException(status_code=404, detail="Reminder not found")
-    reminder.sent = True
-    db.commit()
-    db.refresh(reminder)
-    return reminder
+    return svc.mark_sent(reminder)

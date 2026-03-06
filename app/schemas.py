@@ -4,14 +4,14 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict
+from sqlmodel import SQLModel
 
 from app.models import AppointmentStatus, PaymentMethod, ReminderType, Role
 
 
 # ── User ─────────────────────────────────────────────────────────────
 
-class UserCreate(BaseModel):
+class UserCreate(SQLModel):
     username: str
     password: str
     full_name: str
@@ -21,8 +21,8 @@ class UserCreate(BaseModel):
     enabled: bool = True
 
 
-class UserResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+class UserResponse(SQLModel):
+    model_config = {"from_attributes": True}
 
     id: int
     username: str
@@ -35,7 +35,7 @@ class UserResponse(BaseModel):
 
 # ── Pet ──────────────────────────────────────────────────────────────
 
-class PetCreate(BaseModel):
+class PetCreate(SQLModel):
     name: str
     species: str
     breed: Optional[str] = None
@@ -45,8 +45,8 @@ class PetCreate(BaseModel):
     owner_id: Optional[int] = None
 
 
-class PetResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+class PetResponse(SQLModel):
+    model_config = {"from_attributes": True}
 
     id: int
     name: str
@@ -60,7 +60,7 @@ class PetResponse(BaseModel):
 
 # ── Appointment ──────────────────────────────────────────────────────
 
-class AppointmentCreate(BaseModel):
+class AppointmentCreate(SQLModel):
     pet_id: int
     veterinarian_id: int
     date_time: datetime
@@ -69,8 +69,8 @@ class AppointmentCreate(BaseModel):
     notes: Optional[str] = None
 
 
-class AppointmentResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+class AppointmentResponse(SQLModel):
+    model_config = {"from_attributes": True}
 
     id: int
     pet_id: int
@@ -83,7 +83,7 @@ class AppointmentResponse(BaseModel):
 
 # ── Medical Record ───────────────────────────────────────────────────
 
-class MedicalRecordCreate(BaseModel):
+class MedicalRecordCreate(SQLModel):
     pet_id: int
     veterinarian_id: int
     date: datetime
@@ -92,8 +92,8 @@ class MedicalRecordCreate(BaseModel):
     notes: Optional[str] = None
 
 
-class MedicalRecordResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+class MedicalRecordResponse(SQLModel):
+    model_config = {"from_attributes": True}
 
     id: int
     pet_id: int
@@ -106,14 +106,14 @@ class MedicalRecordResponse(BaseModel):
 
 # ── Vaccine ──────────────────────────────────────────────────────────
 
-class VaccineCreate(BaseModel):
+class VaccineCreate(SQLModel):
     name: str
     manufacturer: Optional[str] = None
     target_species: Optional[str] = None
 
 
-class VaccineResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+class VaccineResponse(SQLModel):
+    model_config = {"from_attributes": True}
 
     id: int
     name: str
@@ -123,7 +123,7 @@ class VaccineResponse(BaseModel):
 
 # ── Vaccine Record ───────────────────────────────────────────────────
 
-class VaccineRecordCreate(BaseModel):
+class VaccineRecordCreate(SQLModel):
     pet_id: int
     vaccine_id: int
     administered_by_id: int
@@ -132,8 +132,8 @@ class VaccineRecordCreate(BaseModel):
     batch_number: Optional[str] = None
 
 
-class VaccineRecordResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+class VaccineRecordResponse(SQLModel):
+    model_config = {"from_attributes": True}
 
     id: int
     pet_id: int
@@ -146,7 +146,7 @@ class VaccineRecordResponse(BaseModel):
 
 # ── Medication ───────────────────────────────────────────────────────
 
-class MedicationCreate(BaseModel):
+class MedicationCreate(SQLModel):
     name: str
     description: Optional[str] = None
     stock_quantity: int
@@ -154,8 +154,8 @@ class MedicationCreate(BaseModel):
     reorder_level: int = 10
 
 
-class MedicationResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+class MedicationResponse(SQLModel):
+    model_config = {"from_attributes": True}
 
     id: int
     name: str
@@ -167,7 +167,7 @@ class MedicationResponse(BaseModel):
 
 # ── Prescription ─────────────────────────────────────────────────────
 
-class PrescriptionCreate(BaseModel):
+class PrescriptionCreate(SQLModel):
     medical_record_id: int
     medication_id: int
     dosage: str
@@ -176,8 +176,8 @@ class PrescriptionCreate(BaseModel):
     instructions: Optional[str] = None
 
 
-class PrescriptionResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+class PrescriptionResponse(SQLModel):
+    model_config = {"from_attributes": True}
 
     id: int
     medical_record_id: int
@@ -190,7 +190,7 @@ class PrescriptionResponse(BaseModel):
 
 # ── Invoice ──────────────────────────────────────────────────────────
 
-class InvoiceCreate(BaseModel):
+class InvoiceCreate(SQLModel):
     owner_id: int
     appointment_id: Optional[int] = None
     date_issued: datetime
@@ -199,8 +199,8 @@ class InvoiceCreate(BaseModel):
     description: Optional[str] = None
 
 
-class InvoiceResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+class InvoiceResponse(SQLModel):
+    model_config = {"from_attributes": True}
 
     id: int
     owner_id: int
@@ -213,15 +213,15 @@ class InvoiceResponse(BaseModel):
 
 # ── Payment ──────────────────────────────────────────────────────────
 
-class PaymentCreate(BaseModel):
+class PaymentCreate(SQLModel):
     invoice_id: int
     amount: Decimal
     payment_date: datetime
     method: PaymentMethod
 
 
-class PaymentResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+class PaymentResponse(SQLModel):
+    model_config = {"from_attributes": True}
 
     id: int
     invoice_id: int
@@ -232,7 +232,7 @@ class PaymentResponse(BaseModel):
 
 # ── Hospitalization ──────────────────────────────────────────────────
 
-class HospitalizationCreate(BaseModel):
+class HospitalizationCreate(SQLModel):
     pet_id: int
     veterinarian_id: int
     admission_date: datetime
@@ -242,8 +242,8 @@ class HospitalizationCreate(BaseModel):
     daily_notes: Optional[str] = None
 
 
-class HospitalizationResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+class HospitalizationResponse(SQLModel):
+    model_config = {"from_attributes": True}
 
     id: int
     pet_id: int
@@ -257,7 +257,7 @@ class HospitalizationResponse(BaseModel):
 
 # ── Reminder ─────────────────────────────────────────────────────────
 
-class ReminderCreate(BaseModel):
+class ReminderCreate(SQLModel):
     user_id: int
     message: str
     reminder_date: datetime
@@ -265,8 +265,8 @@ class ReminderCreate(BaseModel):
     type: ReminderType
 
 
-class ReminderResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+class ReminderResponse(SQLModel):
+    model_config = {"from_attributes": True}
 
     id: int
     user_id: int

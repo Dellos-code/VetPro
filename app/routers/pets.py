@@ -3,11 +3,12 @@ from __future__ import annotations
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlmodel import Session
 
 from app.database import get_db
 from app.models import Pet
 from app.schemas import PetCreate, PetResponse
+from app.services.pet_service import PetService
 
 router = APIRouter(prefix="/api/pets", tags=["pets"])
 
@@ -17,11 +18,8 @@ def create_pet(
     payload: PetCreate,
     db: Annotated[Session, Depends(get_db)],
 ) -> Pet:
-    pet = Pet(**payload.model_dump())
-    db.add(pet)
-    db.commit()
-    db.refresh(pet)
-    return pet
+    svc = PetService(db)
+    return svc.create(payload)
 
 
 @router.get("/{pet_id}", response_model=PetResponse)
@@ -29,7 +27,8 @@ def get_pet(
     pet_id: int,
     db: Annotated[Session, Depends(get_db)],
 ) -> Pet:
-    pet = db.get(Pet, pet_id)
+    svc = PetService(db)
+    pet = svc.get_by_id(pet_id)
     if pet is None:
         raise HTTPException(status_code=404, detail="Pet not found")
     return pet
@@ -40,7 +39,8 @@ def get_pets_by_owner(
     owner_id: int,
     db: Annotated[Session, Depends(get_db)],
 ) -> list[Pet]:
-    return db.query(Pet).filter(Pet.owner_id == owner_id).all()
+    svc = PetService(db)
+    return svc.get_by_owner(owner_id)
 
 
 @router.get("/microchip/{number}", response_model=PetResponse)
@@ -48,7 +48,8 @@ def get_pet_by_microchip(
     number: str,
     db: Annotated[Session, Depends(get_db)],
 ) -> Pet:
-    pet = db.query(Pet).filter(Pet.microchip_number == number).first()
+    svc = PetService(db)
+    pet = svc.get_by_microchip(number)
     if pet is None:
         raise HTTPException(status_code=404, detail="Pet not found")
     return pet
@@ -60,14 +61,11 @@ def update_pet(
     payload: PetCreate,
     db: Annotated[Session, Depends(get_db)],
 ) -> Pet:
-    pet = db.get(Pet, pet_id)
+    svc = PetService(db)
+    pet = svc.get_by_id(pet_id)
     if pet is None:
         raise HTTPException(status_code=404, detail="Pet not found")
-    for key, value in payload.model_dump().items():
-        setattr(pet, key, value)
-    db.commit()
-    db.refresh(pet)
-    return pet
+    return svc.update(pet, payload)
 
 
 @router.delete("/{pet_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -75,8 +73,8 @@ def delete_pet(
     pet_id: int,
     db: Annotated[Session, Depends(get_db)],
 ) -> None:
-    pet = db.get(Pet, pet_id)
+    svc = PetService(db)
+    pet = svc.get_by_id(pet_id)
     if pet is None:
         raise HTTPException(status_code=404, detail="Pet not found")
-    db.delete(pet)
-    db.commit()
+    svc.delete(pet)
