@@ -19,6 +19,9 @@ class ReminderService:
         self.db.refresh(reminder)
         return reminder
 
+    def get_by_id(self, reminder_id: int) -> Reminder | None:
+        return self.db.get(Reminder, reminder_id)
+
     def get_by_user(self, user_id: int) -> list[Reminder]:
         return list(
             self.db.exec(

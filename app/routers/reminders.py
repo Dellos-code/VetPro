@@ -45,7 +45,7 @@ def mark_as_sent(
     db: Annotated[Session, Depends(get_db)],
 ) -> Reminder:
     svc = ReminderService(db)
-    reminder = svc.db.get(Reminder, reminder_id)
+    reminder = svc.get_by_id(reminder_id)
     if reminder is None:
         raise HTTPException(status_code=404, detail="Reminder not found")
     return svc.mark_sent(reminder)
