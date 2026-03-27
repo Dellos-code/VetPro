@@ -38,5 +38,5 @@ def get_vaccine(
     svc = VaccineService(db)
     vaccine = svc.get_by_id(vaccine_id)
     if vaccine is None:
-        raise HTTPException(status_code=404, detail="Vaccine not found")
+        raise HTTPException(status_code=404, detail="Το εμβόλιο δεν βρέθηκε")
     return vaccine

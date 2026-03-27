@@ -67,7 +67,7 @@ def get_appointment(
     svc = AppointmentService(db)
     appointment = svc.get_by_id(appointment_id)
     if appointment is None:
-        raise HTTPException(status_code=404, detail="Appointment not found")
+        raise HTTPException(status_code=404, detail="Το ραντεβού δεν βρέθηκε")
     return appointment
 
 
@@ -80,7 +80,7 @@ def update_appointment(
     svc = AppointmentService(db)
     appointment = svc.get_by_id(appointment_id)
     if appointment is None:
-        raise HTTPException(status_code=404, detail="Appointment not found")
+        raise HTTPException(status_code=404, detail="Το ραντεβού δεν βρέθηκε")
     return svc.update(appointment, payload)
 
 
@@ -92,7 +92,7 @@ def cancel_appointment(
     svc = AppointmentService(db)
     appointment = svc.get_by_id(appointment_id)
     if appointment is None:
-        raise HTTPException(status_code=404, detail="Appointment not found")
+        raise HTTPException(status_code=404, detail="Το ραντεβού δεν βρέθηκε")
     return svc.cancel(appointment)
 
 
@@ -104,5 +104,5 @@ def complete_appointment(
     svc = AppointmentService(db)
     appointment = svc.get_by_id(appointment_id)
     if appointment is None:
-        raise HTTPException(status_code=404, detail="Appointment not found")
+        raise HTTPException(status_code=404, detail="Το ραντεβού δεν βρέθηκε")
     return svc.complete(appointment)

@@ -30,7 +30,7 @@ def get_pet(
     svc = PetService(db)
     pet = svc.get_by_id(pet_id)
     if pet is None:
-        raise HTTPException(status_code=404, detail="Pet not found")
+        raise HTTPException(status_code=404, detail="Το κατοικίδιο δεν βρέθηκε")
     return pet
 
 
@@ -51,7 +51,7 @@ def get_pet_by_microchip(
     svc = PetService(db)
     pet = svc.get_by_microchip(number)
     if pet is None:
-        raise HTTPException(status_code=404, detail="Pet not found")
+        raise HTTPException(status_code=404, detail="Το κατοικίδιο δεν βρέθηκε")
     return pet
 
 
@@ -64,7 +64,7 @@ def update_pet(
     svc = PetService(db)
     pet = svc.get_by_id(pet_id)
     if pet is None:
-        raise HTTPException(status_code=404, detail="Pet not found")
+        raise HTTPException(status_code=404, detail="Το κατοικίδιο δεν βρέθηκε")
     return svc.update(pet, payload)
 
 
@@ -76,5 +76,5 @@ def delete_pet(
     svc = PetService(db)
     pet = svc.get_by_id(pet_id)
     if pet is None:
-        raise HTTPException(status_code=404, detail="Pet not found")
+        raise HTTPException(status_code=404, detail="Το κατοικίδιο δεν βρέθηκε")
     svc.delete(pet)

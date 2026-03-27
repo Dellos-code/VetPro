@@ -47,7 +47,7 @@ def get_invoice(
     svc = InvoiceService(db)
     invoice = svc.get_by_id(invoice_id)
     if invoice is None:
-        raise HTTPException(status_code=404, detail="Invoice not found")
+        raise HTTPException(status_code=404, detail="Το τιμολόγιο δεν βρέθηκε")
     return invoice
 
 
@@ -59,5 +59,5 @@ def pay_invoice(
     svc = InvoiceService(db)
     invoice = svc.get_by_id(invoice_id)
     if invoice is None:
-        raise HTTPException(status_code=404, detail="Invoice not found")
+        raise HTTPException(status_code=404, detail="Το τιμολόγιο δεν βρέθηκε")
     return svc.mark_paid(invoice)

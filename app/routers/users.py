@@ -31,7 +31,7 @@ def get_user(
     svc = UserService(db)
     user = svc.get_by_id(user_id)
     if user is None:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=404, detail="Ο χρήστης δεν βρέθηκε")
     return user
 
 
@@ -53,7 +53,7 @@ def update_user(
     svc = UserService(db)
     user = svc.get_by_id(user_id)
     if user is None:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=404, detail="Ο χρήστης δεν βρέθηκε")
     return svc.update(user, payload)
 
 
@@ -69,5 +69,5 @@ def delete_user(
     svc = UserService(db)
     user = svc.get_by_id(user_id)
     if user is None:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=404, detail="Ο χρήστης δεν βρέθηκε")
     svc.delete(user)

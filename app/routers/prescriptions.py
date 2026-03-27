@@ -36,7 +36,7 @@ def get_prescription(
     svc = PrescriptionService(db)
     prescription = svc.get_by_id(prescription_id)
     if prescription is None:
-        raise HTTPException(status_code=404, detail="Prescription not found")
+        raise HTTPException(status_code=404, detail="Η συνταγή δεν βρέθηκε")
     return prescription
 
 

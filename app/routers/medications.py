@@ -52,7 +52,7 @@ def get_medication(
     svc = MedicationService(db)
     medication = svc.get_by_id(medication_id)
     if medication is None:
-        raise HTTPException(status_code=404, detail="Medication not found")
+        raise HTTPException(status_code=404, detail="Το φάρμακο δεν βρέθηκε")
     return medication
 
 
@@ -69,7 +69,7 @@ def update_medication(
     svc = MedicationService(db)
     medication = svc.get_by_id(medication_id)
     if medication is None:
-        raise HTTPException(status_code=404, detail="Medication not found")
+        raise HTTPException(status_code=404, detail="Το φάρμακο δεν βρέθηκε")
     return svc.update(medication, payload)
 
 
@@ -86,5 +86,5 @@ def update_stock(
     svc = MedicationService(db)
     medication = svc.get_by_id(medication_id)
     if medication is None:
-        raise HTTPException(status_code=404, detail="Medication not found")
+        raise HTTPException(status_code=404, detail="Το φάρμακο δεν βρέθηκε")
     return svc.update_stock(medication, quantity)

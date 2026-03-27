@@ -36,7 +36,7 @@ def get_medical_record(
     svc = MedicalRecordService(db)
     record = svc.get_by_id(record_id)
     if record is None:
-        raise HTTPException(status_code=404, detail="Medical record not found")
+        raise HTTPException(status_code=404, detail="Το ιατρικό αρχείο δεν βρέθηκε")
     return record
 
 

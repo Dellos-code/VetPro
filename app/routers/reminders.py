@@ -47,5 +47,5 @@ def mark_as_sent(
     svc = ReminderService(db)
     reminder = svc.get_by_id(reminder_id)
     if reminder is None:
-        raise HTTPException(status_code=404, detail="Reminder not found")
+        raise HTTPException(status_code=404, detail="Η υπενθύμιση δεν βρέθηκε")
     return svc.mark_sent(reminder)
