@@ -6,8 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlmodel import Session
 
 from app.database import get_db
-from app.models import Pet
-from app.schemas import AnimalHistoryResponse, PetResponse
+from app.schemas import AnimalHistoryResponse, AnimalSearchResponse
 from app.services.animal_history_service import AnimalHistoryService
 
 router = APIRouter(prefix="/api/animal-history", tags=["animal-history"])
@@ -29,11 +28,11 @@ def get_animal_history(
     return result
 
 
-@router.get("/search/", response_model=list[PetResponse])
+@router.get("/search/", response_model=AnimalSearchResponse)
 def search_animals_by_name(
     name: Annotated[str, Query(min_length=1)],
     db: Annotated[Session, Depends(get_db)],
-) -> list[Pet]:
+) -> AnimalSearchResponse:
     """UC1 alt flow — Αναζήτηση ζώου (πολλαπλά αποτελέσματα / συνώνυμα)."""
     svc = AnimalHistoryService(db)
     return svc.search_by_name(name)

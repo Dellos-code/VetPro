@@ -157,6 +157,7 @@ class TestUC1AnimalHistory:
         assert len(data["medical_records"]) == 0
         assert len(data["vaccine_records"]) == 0
         assert len(data["examinations"]) == 0
+        assert data["message"] == "Δεν βρέθηκε ιατρικό ιστορικό για αυτό το ζώο."
 
     def test_search_by_name_multiple_results(self):
         """UC1 alt flow — Πολλαπλά αποτελέσματα / συνώνυμα."""
@@ -164,7 +165,18 @@ class TestUC1AnimalHistory:
         _create_pet(name="Max Jr", microchip_number="S2")
         resp = client.get("/api/animal-history/search/", params={"name": "Max"})
         assert resp.status_code == 200
-        assert len(resp.json()) >= 2
+        data = resp.json()
+        assert data["count"] >= 2
+        assert len(data["results"]) >= 2
+        assert "Βρέθηκαν" in data["message"]
+
+    def test_search_by_name_no_results(self):
+        """UC1 alt flow — Δεν βρέθηκε ζώο."""
+        resp = client.get("/api/animal-history/search/", params={"name": "XXYYZZ"})
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["count"] == 0
+        assert data["message"] == "Δεν βρέθηκε ζώο με αυτό το όνομα."
 
 
 # ===========================================================================
@@ -744,3 +756,73 @@ class TestExaminations:
     def test_examination_not_found(self):
         resp = client.get("/api/examinations/9999")
         assert resp.status_code == 404
+
+
+# ===========================================================================
+# Q1 Audit: Role-specific entities exist in DB
+# ===========================================================================
+
+
+class TestRoleEntities:
+    def test_veterinarian_entity_exists(self):
+        """Q1 Audit — Veterinarian entity explicitly in DB."""
+        from app.models import Veterinarian
+        _, vet_data = _vet_auth("role_vet")
+        from tests.conftest import test_engine
+        from sqlmodel import Session
+        vet = Veterinarian(user_id=vet_data["id"], specialization="Surgery", license_number="VET-001")
+        with Session(test_engine) as session:
+            session.add(vet)
+            session.commit()
+            session.refresh(vet)
+            assert vet.id is not None
+            assert vet.user_id == vet_data["id"]
+
+    def test_administrator_entity_exists(self):
+        """Q1 Audit — Administrator entity explicitly in DB."""
+        from app.models import Administrator
+        admin_data = _create_user("role_admin", "pass", Role.ADMIN)
+        from tests.conftest import test_engine
+        from sqlmodel import Session
+        admin = Administrator(user_id=admin_data["id"], department="IT")
+        with Session(test_engine) as session:
+            session.add(admin)
+            session.commit()
+            session.refresh(admin)
+            assert admin.id is not None
+
+    def test_owner_entity_exists(self):
+        """Q1 Audit — Owner entity explicitly in DB."""
+        from app.models import Owner as OwnerModel
+        _, owner_data = _owner_auth("role_own")
+        from tests.conftest import test_engine
+        from sqlmodel import Session
+        owner = OwnerModel(user_id=owner_data["id"], address="123 Pet St")
+        with Session(test_engine) as session:
+            session.add(owner)
+            session.commit()
+            session.refresh(owner)
+            assert owner.id is not None
+
+    def test_receptionist_entity_exists(self):
+        """Q1 Audit — Receptionist entity explicitly in DB."""
+        from app.models import Receptionist
+        _, rec_data = _receptionist_auth("role_rec")
+        from tests.conftest import test_engine
+        from sqlmodel import Session
+        rec = Receptionist(user_id=rec_data["id"], desk_number="D1")
+        with Session(test_engine) as session:
+            session.add(rec)
+            session.commit()
+            session.refresh(rec)
+            assert rec.id is not None
+
+    def test_animal_alias_is_pet(self):
+        """Q1 Audit — Animal alias maps to Pet model."""
+        from app.models import Animal, Pet
+        assert Animal is Pet
+
+    def test_vaccination_alias_is_vaccine_record(self):
+        """Q1 Audit — Vaccination alias maps to VaccineRecord model."""
+        from app.models import Vaccination, VaccineRecord
+        assert Vaccination is VaccineRecord

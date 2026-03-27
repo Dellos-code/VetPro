@@ -3,7 +3,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import List, Optional
 
-from sqlalchemy import Column, Enum as SAEnum, Numeric, Text
+from sqlalchemy import Column, Enum as SAEnum, ForeignKey, Integer, Numeric, Text
 from sqlmodel import Field, Relationship, SQLModel
 
 
@@ -75,6 +75,62 @@ class User(SQLModel, table=True):
     pets: List["Pet"] = Relationship(back_populates="owner")
     reminders: List["Reminder"] = Relationship(back_populates="user")
     notifications: List["Notification"] = Relationship(back_populates="user")
+
+
+# ── Ρόλοι χρηστών — Role-specific entities (inherit/link User) ──────
+
+
+class Veterinarian(SQLModel, table=True):
+    """Κτηνίατρος — links to User with role=VET."""
+    __tablename__ = "veterinarians"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(
+        sa_column=Column(Integer, ForeignKey("users.id"), unique=True, nullable=False),
+    )
+    specialization: Optional[str] = Field(default=None)
+    license_number: Optional[str] = Field(default=None)
+
+    user: Optional["User"] = Relationship()
+
+
+class Administrator(SQLModel, table=True):
+    """Διαχειριστής — links to User with role=ADMIN."""
+    __tablename__ = "administrators"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(
+        sa_column=Column(Integer, ForeignKey("users.id"), unique=True, nullable=False),
+    )
+    department: Optional[str] = Field(default=None)
+
+    user: Optional["User"] = Relationship()
+
+
+class Owner(SQLModel, table=True):
+    """Ιδιοκτήτης — links to User with role=OWNER."""
+    __tablename__ = "owners"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(
+        sa_column=Column(Integer, ForeignKey("users.id"), unique=True, nullable=False),
+    )
+    address: Optional[str] = Field(default=None)
+
+    user: Optional["User"] = Relationship()
+
+
+class Receptionist(SQLModel, table=True):
+    """Γραμματέας — links to User with role=RECEPTIONIST."""
+    __tablename__ = "receptionists"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(
+        sa_column=Column(Integer, ForeignKey("users.id"), unique=True, nullable=False),
+    )
+    desk_number: Optional[str] = Field(default=None)
+
+    user: Optional["User"] = Relationship()
 
 
 class Pet(SQLModel, table=True):
@@ -378,3 +434,12 @@ class Report(SQLModel, table=True):
 
     pet: Optional["Pet"] = Relationship()
     generated_by: Optional["User"] = Relationship()
+
+
+# ── Ψευδώνυμα — Domain Model name aliases for spec compliance ───────
+
+# Ζώο — the specification uses "Animal"; maps to Pet
+Animal = Pet
+
+# Εμβολιασμός — the specification uses "Vaccination"; maps to VaccineRecord
+Vaccination = VaccineRecord

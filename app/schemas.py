@@ -425,6 +425,16 @@ class AnimalHistoryResponse(SQLModel):
     medical_records: List[MedicalRecordResponse] = []
     vaccine_records: List[VaccineRecordResponse] = []
     examinations: List[ExaminationResponse] = []
+    # UC1 alt flow — Μήνυμα εάν το ιστορικό είναι κενό
+    message: Optional[str] = None
+
+
+class AnimalSearchResponse(SQLModel):
+    """UC1 — Αποτελέσματα αναζήτησης ζώων (πολλαπλά αποτελέσματα / συνώνυμα)."""
+    results: List[PetResponse] = []
+    count: int = 0
+    # UC1 alt flow — Μήνυμα πολλαπλών αποτελεσμάτων
+    message: Optional[str] = None
 
 
 class OwnerProfileResponse(SQLModel):
@@ -440,3 +450,60 @@ class AllergyCheckResult(SQLModel):
     has_previous_reaction: bool = False
     previous_side_effects: List[SideEffectResponse] = []
     warning_message: Optional[str] = None
+
+
+# ── Σχήματα ρόλων — Role-specific entity schemas ────────────────────
+
+
+class VeterinarianCreate(SQLModel):
+    user_id: int
+    specialization: Optional[str] = None
+    license_number: Optional[str] = None
+
+
+class VeterinarianResponse(SQLModel):
+    model_config = {"from_attributes": True}
+
+    id: int
+    user_id: int
+    specialization: Optional[str] = None
+    license_number: Optional[str] = None
+
+
+class AdministratorCreate(SQLModel):
+    user_id: int
+    department: Optional[str] = None
+
+
+class AdministratorResponse(SQLModel):
+    model_config = {"from_attributes": True}
+
+    id: int
+    user_id: int
+    department: Optional[str] = None
+
+
+class OwnerCreate(SQLModel):
+    user_id: int
+    address: Optional[str] = None
+
+
+class OwnerResponse(SQLModel):
+    model_config = {"from_attributes": True}
+
+    id: int
+    user_id: int
+    address: Optional[str] = None
+
+
+class ReceptionistCreate(SQLModel):
+    user_id: int
+    desk_number: Optional[str] = None
+
+
+class ReceptionistResponse(SQLModel):
+    model_config = {"from_attributes": True}
+
+    id: int
+    user_id: int
+    desk_number: Optional[str] = None
