@@ -8,9 +8,21 @@ from decimal import Decimal
 import pytest
 from fastapi.testclient import TestClient
 from httpx import BasicAuth
+from sqlmodel import Session
 
 from app.main import app
-from app.models import Role
+from app.models import (
+    Administrator,
+    Animal,
+    Owner as OwnerModel,
+    Receptionist,
+    Role,
+    Vaccination,
+    VaccineRecord,
+    Veterinarian,
+    Pet,
+)
+from tests.conftest import test_engine
 
 # ---------------------------------------------------------------------------
 # Test client (DB setup handled by conftest.py)
@@ -766,10 +778,7 @@ class TestExaminations:
 class TestRoleEntities:
     def test_veterinarian_entity_exists(self):
         """Q1 Audit — Veterinarian entity explicitly in DB."""
-        from app.models import Veterinarian
         _, vet_data = _vet_auth("role_vet")
-        from tests.conftest import test_engine
-        from sqlmodel import Session
         vet = Veterinarian(user_id=vet_data["id"], specialization="Surgery", license_number="VET-001")
         with Session(test_engine) as session:
             session.add(vet)
@@ -780,10 +789,7 @@ class TestRoleEntities:
 
     def test_administrator_entity_exists(self):
         """Q1 Audit — Administrator entity explicitly in DB."""
-        from app.models import Administrator
         admin_data = _create_user("role_admin", "pass", Role.ADMIN)
-        from tests.conftest import test_engine
-        from sqlmodel import Session
         admin = Administrator(user_id=admin_data["id"], department="IT")
         with Session(test_engine) as session:
             session.add(admin)
@@ -793,10 +799,7 @@ class TestRoleEntities:
 
     def test_owner_entity_exists(self):
         """Q1 Audit — Owner entity explicitly in DB."""
-        from app.models import Owner as OwnerModel
         _, owner_data = _owner_auth("role_own")
-        from tests.conftest import test_engine
-        from sqlmodel import Session
         owner = OwnerModel(user_id=owner_data["id"], address="123 Pet St")
         with Session(test_engine) as session:
             session.add(owner)
@@ -806,10 +809,7 @@ class TestRoleEntities:
 
     def test_receptionist_entity_exists(self):
         """Q1 Audit — Receptionist entity explicitly in DB."""
-        from app.models import Receptionist
         _, rec_data = _receptionist_auth("role_rec")
-        from tests.conftest import test_engine
-        from sqlmodel import Session
         rec = Receptionist(user_id=rec_data["id"], desk_number="D1")
         with Session(test_engine) as session:
             session.add(rec)
@@ -819,10 +819,8 @@ class TestRoleEntities:
 
     def test_animal_alias_is_pet(self):
         """Q1 Audit — Animal alias maps to Pet model."""
-        from app.models import Animal, Pet
         assert Animal is Pet
 
     def test_vaccination_alias_is_vaccine_record(self):
         """Q1 Audit — Vaccination alias maps to VaccineRecord model."""
-        from app.models import Vaccination, VaccineRecord
         assert Vaccination is VaccineRecord

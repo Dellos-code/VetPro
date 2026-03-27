@@ -75,7 +75,7 @@ class AnimalHistoryService:
 
         # UC1 alt flow — Πολλαπλά αποτελέσματα / συνώνυμα
         message = None
-        if len(results) == 0:
+        if not results:
             message = "Δεν βρέθηκε ζώο με αυτό το όνομα."
         elif len(results) > 1:
             message = (
