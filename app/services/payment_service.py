@@ -5,7 +5,7 @@ from decimal import Decimal
 from sqlalchemy import func
 from sqlmodel import Session, select
 
-from app.models import Invoice, Payment
+from app.models import Invoice, Payment, User
 from app.schemas import PaymentCreate
 
 
@@ -28,6 +28,24 @@ class PaymentService:
             ).one_or_none() or Decimal(0)
             if total_paid >= invoice.total_amount:
                 invoice.paid = True
+                invoice.remaining_amount = Decimal("0.00")
+            else:
+                # UC2 — Μερική πληρωμή: υπολογισμός υπολοίπου
+                invoice.remaining_amount = invoice.total_amount - total_paid
+
+            # UC2 — Ενημέρωση χρέους ιδιοκτήτη
+            owner = self.db.get(User, invoice.owner_id)
+            if owner is not None:
+                unpaid_invoices = self.db.exec(
+                    select(Invoice).where(
+                        Invoice.owner_id == owner.id,
+                        Invoice.paid == False,  # noqa: E712
+                    )
+                ).all()
+                owner.debt_balance = sum(
+                    (inv.remaining_amount or inv.total_amount)
+                    for inv in unpaid_invoices
+                )
 
         self.db.commit()
         self.db.refresh(payment)

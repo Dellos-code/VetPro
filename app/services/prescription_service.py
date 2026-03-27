@@ -13,10 +13,17 @@ class PrescriptionService:
 
     def create(self, payload: PrescriptionCreate) -> Prescription:
         medication = self.db.get(Medication, payload.medication_id)
+        # UC5 alt flow — Φάρμακο δεν βρέθηκε στον κατάλογο
         if medication is None:
-            raise HTTPException(status_code=404, detail="Medication not found")
+            raise HTTPException(
+                status_code=404,
+                detail="Το φάρμακο δεν βρέθηκε στον κατάλογο",
+            )
         if medication.stock_quantity < 1:
-            raise HTTPException(status_code=400, detail="Medication out of stock")
+            raise HTTPException(
+                status_code=400,
+                detail="Το φάρμακο δεν είναι διαθέσιμο (εξαντλημένο απόθεμα)",
+            )
         medication.stock_quantity -= 1
 
         prescription = Prescription(**payload.model_dump())

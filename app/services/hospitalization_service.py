@@ -41,9 +41,16 @@ class HospitalizationService:
             ).all()
         )
 
-    def discharge(self, hospitalization: Hospitalization) -> Hospitalization:
+    def discharge(
+        self,
+        hospitalization: Hospitalization,
+        discharge_instructions: str | None = None,
+    ) -> Hospitalization:
+        """UC4 — Εξιτήριο με οδηγίες."""
         hospitalization.discharge_date = datetime.now()
         hospitalization.status = "DISCHARGED"
+        if discharge_instructions is not None:
+            hospitalization.discharge_instructions = discharge_instructions
         self.db.commit()
         self.db.refresh(hospitalization)
         return hospitalization

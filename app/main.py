@@ -9,11 +9,16 @@ from sqlmodel import SQLModel
 from app.config import settings
 from app.database import engine
 from app.routers import (
+    animal_history,
     appointments,
+    examinations,
+    generated_reports,
     hospitalizations,
     invoices,
     medical_records,
     medications,
+    notifications,
+    owner_profile,
     payments,
     pets,
     prescriptions,
@@ -52,6 +57,13 @@ app.include_router(payments.router)
 app.include_router(hospitalizations.router)
 app.include_router(reminders.router)
 app.include_router(reports.router)
+
+# UC-specific routers
+app.include_router(examinations.router)
+app.include_router(notifications.router)
+app.include_router(animal_history.router)
+app.include_router(owner_profile.router)
+app.include_router(generated_reports.router)
 
 # Engine routes from the existing micro-service
 app.mount("/engines", engine_app)

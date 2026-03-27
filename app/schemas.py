@@ -2,11 +2,19 @@ from __future__ import annotations
 
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Optional
+from typing import List, Optional
 
 from sqlmodel import SQLModel
 
-from app.models import AppointmentStatus, PaymentMethod, ReminderType, Role
+from app.models import (
+    AppointmentStatus,
+    HospitalizationStatus,
+    NotificationType,
+    PaymentMethod,
+    ReminderType,
+    Role,
+    SideEffectSeverity,
+)
 
 
 # ── User ─────────────────────────────────────────────────────────────
@@ -31,6 +39,7 @@ class UserResponse(SQLModel):
     phone: Optional[str] = None
     role: Role
     enabled: bool
+    debt_balance: Decimal = Decimal("0.00")
 
 
 # ── Pet ──────────────────────────────────────────────────────────────
@@ -67,6 +76,8 @@ class AppointmentCreate(SQLModel):
     reason: Optional[str] = None
     status: AppointmentStatus = AppointmentStatus.SCHEDULED
     notes: Optional[str] = None
+    priority: int = 1
+    duration_minutes: int = 30
 
 
 class AppointmentResponse(SQLModel):
@@ -79,6 +90,8 @@ class AppointmentResponse(SQLModel):
     reason: Optional[str] = None
     status: AppointmentStatus
     notes: Optional[str] = None
+    priority: int = 1
+    duration_minutes: int = 30
 
 
 # ── Medical Record ───────────────────────────────────────────────────
@@ -104,12 +117,36 @@ class MedicalRecordResponse(SQLModel):
     notes: Optional[str] = None
 
 
+# ── Examination ──────────────────────────────────────────────────────
+
+class ExaminationCreate(SQLModel):
+    pet_id: int
+    veterinarian_id: int
+    date: datetime
+    exam_type: str
+    findings: Optional[str] = None
+    recommendations: Optional[str] = None
+
+
+class ExaminationResponse(SQLModel):
+    model_config = {"from_attributes": True}
+
+    id: int
+    pet_id: int
+    veterinarian_id: int
+    date: datetime
+    exam_type: str
+    findings: Optional[str] = None
+    recommendations: Optional[str] = None
+
+
 # ── Vaccine ──────────────────────────────────────────────────────────
 
 class VaccineCreate(SQLModel):
     name: str
     manufacturer: Optional[str] = None
     target_species: Optional[str] = None
+    default_interval_days: int = 365
 
 
 class VaccineResponse(SQLModel):
@@ -119,6 +156,7 @@ class VaccineResponse(SQLModel):
     name: str
     manufacturer: Optional[str] = None
     target_species: Optional[str] = None
+    default_interval_days: int = 365
 
 
 # ── Vaccine Record ───────────────────────────────────────────────────
@@ -144,6 +182,27 @@ class VaccineRecordResponse(SQLModel):
     batch_number: Optional[str] = None
 
 
+# ── Side Effect ──────────────────────────────────────────────────────
+
+class SideEffectCreate(SQLModel):
+    vaccine_record_id: int
+    description: str
+    severity: SideEffectSeverity
+    date_observed: date
+    notes: Optional[str] = None
+
+
+class SideEffectResponse(SQLModel):
+    model_config = {"from_attributes": True}
+
+    id: int
+    vaccine_record_id: int
+    description: str
+    severity: SideEffectSeverity
+    date_observed: date
+    notes: Optional[str] = None
+
+
 # ── Medication ───────────────────────────────────────────────────────
 
 class MedicationCreate(SQLModel):
@@ -152,6 +211,9 @@ class MedicationCreate(SQLModel):
     stock_quantity: int
     unit_price: Optional[Decimal] = None
     reorder_level: int = 10
+    avg_daily_demand: Optional[float] = None
+    lead_time_mean: Optional[float] = None
+    lead_time_std: Optional[float] = None
 
 
 class MedicationResponse(SQLModel):
@@ -163,6 +225,9 @@ class MedicationResponse(SQLModel):
     stock_quantity: int
     unit_price: Optional[Decimal] = None
     reorder_level: int
+    avg_daily_demand: Optional[float] = None
+    lead_time_mean: Optional[float] = None
+    lead_time_std: Optional[float] = None
 
 
 # ── Prescription ─────────────────────────────────────────────────────
@@ -209,6 +274,7 @@ class InvoiceResponse(SQLModel):
     total_amount: Decimal
     paid: bool
     description: Optional[str] = None
+    remaining_amount: Decimal = Decimal("0.00")
 
 
 # ── Payment ──────────────────────────────────────────────────────────
@@ -240,6 +306,7 @@ class HospitalizationCreate(SQLModel):
     reason: str
     status: Optional[str] = None
     daily_notes: Optional[str] = None
+    discharge_instructions: Optional[str] = None
 
 
 class HospitalizationResponse(SQLModel):
@@ -253,6 +320,30 @@ class HospitalizationResponse(SQLModel):
     reason: str
     status: Optional[str] = None
     daily_notes: Optional[str] = None
+    discharge_instructions: Optional[str] = None
+
+
+# ── Hospitalization Log ──────────────────────────────────────────────
+
+class HospitalizationLogCreate(SQLModel):
+    hospitalization_id: int
+    date: datetime
+    temperature: Optional[float] = None
+    diet: Optional[str] = None
+    medications_given: Optional[str] = None
+    observations: Optional[str] = None
+
+
+class HospitalizationLogResponse(SQLModel):
+    model_config = {"from_attributes": True}
+
+    id: int
+    hospitalization_id: int
+    date: datetime
+    temperature: Optional[float] = None
+    diet: Optional[str] = None
+    medications_given: Optional[str] = None
+    observations: Optional[str] = None
 
 
 # ── Reminder ─────────────────────────────────────────────────────────
@@ -274,3 +365,78 @@ class ReminderResponse(SQLModel):
     reminder_date: datetime
     sent: bool
     type: ReminderType
+
+
+# ── Notification ─────────────────────────────────────────────────────
+
+class NotificationCreate(SQLModel):
+    user_id: int
+    message: str
+    notification_type: NotificationType
+    scheduled_date: datetime
+    sent: bool = False
+    related_entity_type: Optional[str] = None
+    related_entity_id: Optional[int] = None
+
+
+class NotificationResponse(SQLModel):
+    model_config = {"from_attributes": True}
+
+    id: int
+    user_id: int
+    message: str
+    notification_type: NotificationType
+    scheduled_date: datetime
+    sent: bool
+    related_entity_type: Optional[str] = None
+    related_entity_id: Optional[int] = None
+
+
+# ── Report ───────────────────────────────────────────────────────────
+
+class ReportCreate(SQLModel):
+    pet_id: Optional[int] = None
+    generated_by_id: int
+    report_type: str
+    date_from: Optional[date] = None
+    date_to: Optional[date] = None
+    generated_at: datetime
+    content: Optional[str] = None
+
+
+class ReportResponse(SQLModel):
+    model_config = {"from_attributes": True}
+
+    id: int
+    pet_id: Optional[int] = None
+    generated_by_id: int
+    report_type: str
+    date_from: Optional[date] = None
+    date_to: Optional[date] = None
+    generated_at: datetime
+    content: Optional[str] = None
+
+
+# ── Composite / UC-specific schemas ─────────────────────────────────
+
+class AnimalHistoryResponse(SQLModel):
+    """UC1 — Πλήρες ιστορικό ζώου."""
+    pet: PetResponse
+    medical_records: List[MedicalRecordResponse] = []
+    vaccine_records: List[VaccineRecordResponse] = []
+    examinations: List[ExaminationResponse] = []
+
+
+class OwnerProfileResponse(SQLModel):
+    """UC7 — Προφίλ ιδιοκτήτη με κατοικίδια και χρέη."""
+    user: UserResponse
+    pets: List[PetResponse] = []
+    unpaid_invoices: List[InvoiceResponse] = []
+    total_debt: Decimal = Decimal("0.00")
+
+
+class AllergyCheckResult(SQLModel):
+    """UC3 — Αποτέλεσμα ελέγχου αλλεργίας εμβολιασμού."""
+    has_previous_reaction: bool = False
+    previous_side_effects: List[SideEffectResponse] = []
+    warning_message: Optional[str] = None
