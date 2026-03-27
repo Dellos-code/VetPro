@@ -39,7 +39,7 @@ class NotificationService:
 
     def get_pending(self) -> list[Notification]:
         """Εκκρεμείς ειδοποιήσεις — unsent notifications whose scheduled date has passed."""
-        now = datetime.utcnow()
+        now = datetime.now()
         return list(
             self.db.exec(
                 select(Notification).where(
@@ -60,7 +60,7 @@ class NotificationService:
 
     def generate_vaccine_reminders(self) -> list[Notification]:
         """UC8 — Δημιουργία ειδοποιήσεων εμβολιασμού 7 ημέρες και 1 ημέρα πριν."""
-        today = datetime.utcnow().date()
+        today = datetime.now().date()
         seven_days = today + timedelta(days=7)
         one_day = today + timedelta(days=1)
 
@@ -122,7 +122,7 @@ class NotificationService:
 
     def generate_appointment_reminders(self) -> list[Notification]:
         """UC8 — Δημιουργία ειδοποιήσεων ραντεβού 7 ημέρες και 1 ημέρα πριν."""
-        today = datetime.utcnow().date()
+        today = datetime.now().date()
         seven_days = today + timedelta(days=7)
         one_day = today + timedelta(days=1)
 

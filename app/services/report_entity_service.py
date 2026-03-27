@@ -97,7 +97,7 @@ class ReportEntityService:
             report_type="medical_history",
             date_from=date_from,
             date_to=date_to,
-            generated_at=datetime.utcnow(),
+            generated_at=datetime.now(),
             content=content,
         )
         self.db.add(report)
