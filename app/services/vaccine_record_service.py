@@ -28,7 +28,7 @@ class VaccineRecordService:
         record = VaccineRecord(**payload.model_dump())
 
         # UC3 — Αυτόματος υπολογισμός επόμενης δόσης
-        if record.next_due_date is None:
+        if record.next_due_date is None and record.date_administered is not None:
             vaccine = self.db.get(Vaccine, record.vaccine_id)
             if vaccine is not None:
                 record.next_due_date = (
