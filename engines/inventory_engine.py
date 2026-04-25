@@ -246,6 +246,40 @@ class InventoryEngine:
 
         return self._analyse(profile, demand_samples)
 
+    def consume_stock(self, profile: MedicationProfile, quantity: int) -> int:
+        """
+        Subtract stock units from a medication profile with strict bounds.
+
+        Parameters
+        ----------
+        profile : MedicationProfile
+            Profile to mutate.
+        quantity : int
+            Units to consume. Must be a positive integer.
+
+        Returns
+        -------
+        int
+            The updated stock level.
+
+        Raises
+        ------
+        ValueError
+            If quantity is not positive or if consumption would make stock
+            negative.
+        """
+        if quantity <= 0:
+            raise ValueError(f"quantity must be > 0; got {quantity}")
+
+        if quantity > profile.current_stock:
+            raise ValueError(
+                "insufficient stock: cannot consume "
+                f"{quantity} units from current_stock={profile.current_stock}"
+            )
+
+        profile.current_stock -= quantity
+        return profile.current_stock
+
     def forecast_batch(
         self,
         profiles: list[MedicationProfile],

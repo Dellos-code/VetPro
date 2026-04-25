@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+from fastapi import HTTPException
 from sqlmodel import Session, select
 
 from app.models import Medication
 from app.schemas import MedicationCreate
+from engines.inventory_engine import InventoryEngine, MedicationProfile
 
 
 class MedicationService:
@@ -40,7 +42,35 @@ class MedicationService:
         return medication
 
     def update_stock(self, medication: Medication, quantity: int) -> Medication:
+        if quantity < 0:
+            raise HTTPException(
+                status_code=400,
+                detail="Το απόθεμα δεν μπορεί να είναι αρνητικό",
+            )
         medication.stock_quantity = quantity
+        self.db.commit()
+        self.db.refresh(medication)
+        return medication
+
+    def consume_stock(self, medication: Medication, quantity: int) -> Medication:
+        profile = MedicationProfile(
+            medication_id=str(medication.id),
+            name=medication.name,
+            current_stock=medication.stock_quantity,
+            avg_daily_demand=0.0,
+        )
+        try:
+            InventoryEngine().consume_stock(profile, quantity)
+        except ValueError as exc:
+            message = str(exc)
+            if "insufficient stock" in message:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Το φάρμακο δεν είναι διαθέσιμο (εξαντλημένο απόθεμα)",
+                ) from exc
+            raise HTTPException(status_code=400, detail=message) from exc
+
+        medication.stock_quantity = profile.current_stock
         self.db.commit()
         self.db.refresh(medication)
         return medication

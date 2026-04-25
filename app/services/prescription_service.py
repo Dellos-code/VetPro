@@ -5,6 +5,7 @@ from sqlmodel import Session, select
 
 from app.models import Medication, Prescription
 from app.schemas import PrescriptionCreate
+from app.services.medication_service import MedicationService
 
 
 class PrescriptionService:
@@ -19,12 +20,7 @@ class PrescriptionService:
                 status_code=404,
                 detail="Το φάρμακο δεν βρέθηκε στον κατάλογο",
             )
-        if medication.stock_quantity < 1:
-            raise HTTPException(
-                status_code=400,
-                detail="Το φάρμακο δεν είναι διαθέσιμο (εξαντλημένο απόθεμα)",
-            )
-        medication.stock_quantity -= 1
+        MedicationService(self.db).consume_stock(medication, quantity=1)
 
         prescription = Prescription(**payload.model_dump())
         self.db.add(prescription)

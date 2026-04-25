@@ -214,6 +214,13 @@ class TestReproducibility(unittest.TestCase):
 
 class TestValidation(unittest.TestCase):
 
+    def test_consume_stock_blocks_negative_inventory(self):
+        engine = _engine()
+        profile = _profile(stock=3)
+        with self.assertRaises(ValueError):
+            engine.consume_stock(profile, quantity=4)
+        self.assertEqual(profile.current_stock, 3)
+
     def test_negative_demand_rejected(self):
         with self.assertRaises(ValueError):
             _engine().forecast(_profile(demand=-1.0))
