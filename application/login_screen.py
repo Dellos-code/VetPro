@@ -4,7 +4,7 @@ class LoginScreen:
     def __init__(self, root):
         self.root = root
         self.root.title("VetPro - Login")
-        self.root.geometry("400x300")
+        self.root.geometry("400x380")
         self.root.configure(bg="#87CEEB")
         
         # Center frame
@@ -71,6 +71,31 @@ class LoginScreen:
             activebackground="#3D7FBF"
         )
         login_btn.pack(pady=10)
+        
+        # Register button
+        register_btn = tk.Button(
+            center_frame,
+            text="Εγγραφή",
+            font=("Arial", 12, "bold"),
+            bg="#28A745",
+            fg="white",
+            width=25,
+            border=0,
+            padx=10,
+            pady=8,
+            cursor="hand2",
+            activebackground="#218838",
+            command=self.open_register
+        )
+        register_btn.pack(pady=(0, 10))
+
+    def open_register(self):
+        register_window = tk.Toplevel(self.root)
+        try:
+            from register_screen import RegisterScreen
+        except ImportError:
+            from application.register_screen import RegisterScreen
+        RegisterScreen(register_window)
 
 
 def main():
