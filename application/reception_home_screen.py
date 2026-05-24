@@ -1,10 +1,10 @@
 import tkinter as tk
 from tkinter import font as tkfont
 
-class VetHomeScreen:
+class ReceptionHomeScreen:
     def __init__(self, root):
         self.root = root
-        self.root.title("VetPro - Αρχική Κτηνιάτρου")
+        self.root.title("VetPro - Αρχική Ρεσεψιόν")
         self.root.geometry("850x500")
         self.root.configure(bg="#D3D3D3")
         
@@ -28,14 +28,9 @@ class VetHomeScreen:
         buttons_data = [
             "Αρχικη",
             "Κλεισιμο Ραντεβου",
-            "Ιστορικο Ζωου",
-            "Συνταγογραφηση",
-            "Διαχειριση Εμβολιων",
             "Ειδοποιησεις",
             "Πληρωμη/ Χρεωση",
-            "Αναφορες",
-            "Stock Φαρμακων",
-            "Διαχειριση Νοσηλειας"
+            "Αναφορες"
         ]
         
         for btn_text in buttons_data:
@@ -52,7 +47,6 @@ class VetHomeScreen:
                 relief="solid",
                 cursor="hand2"
             )
-            # Add a bit of space between buttons if needed, or stack them tight
             btn.pack(fill="x", padx=10, pady=2)
 
         # --- Main Content Area ---
@@ -82,57 +76,33 @@ class VetHomeScreen:
         
         # --- Info Boxes ---
         boxes_y = 150
-        box_width = 150
-        box_height = 80
         
-        # Box 1: Appointments
+        # Box 1: Appointments of the Day
         self.create_info_box(
             x=150, y=boxes_y, 
             bg_color="#9ACD32", # Yellow-Green
-            title="Ραντεβου\nσημερα",
+            title="Ραντεβου\nτης Ημερας",
             count="12",
             count_color="#0000FF"
         )
         
-        # Box 2: Hospitalizations
+        # Box 2: Pending Payments
         self.create_info_box(
             x=320, y=boxes_y, 
             bg_color="#6495ED", # Cornflower Blue
-            title="Ενεργες\nνοσηλειες",
-            count="3",
+            title="Εκκρεμεις\nΠληρωμες",
+            count="5",
             count_color="#0000FF"
         )
         
-        # Box 3: Low Stock
+        # Box 3: Notifications to send
         self.create_info_box(
             x=490, y=boxes_y, 
             bg_color="#DC143C", # Crimson Red
-            title="Χαμηλο Stock",
-            count="5",
+            title="Ειδοποιησεις\nπρος Αποστολη",
+            count="4",
             count_color="black"
         )
-        
-        # --- Search Bar ---
-        self.search_frame = tk.Frame(self.main_frame, bg="black", bd=2, relief="solid")
-        self.search_frame.place(x=150, y=280, width=300, height=40)
-        
-        self.search_label = tk.Label(
-            self.search_frame,
-            text="Αναζητηση Πελατη/ Ζωου:",
-            font=("Arial", 10, "bold"),
-            bg="#696969", # Dim gray inside
-            fg="black"
-        )
-        self.search_label.pack(side="left", fill="y")
-        
-        self.search_entry = tk.Entry(
-            self.search_frame, 
-            bg="#696969", 
-            fg="black", 
-            borderwidth=0,
-            font=("Arial", 10, "bold")
-        )
-        self.search_entry.pack(side="left", fill="both", expand=True)
         
         # Cat Image placeholder bottom right
         self.cat_label = tk.Label(
@@ -174,7 +144,7 @@ class VetHomeScreen:
 
 def main():
     root = tk.Tk()
-    app = VetHomeScreen(root)
+    app = ReceptionHomeScreen(root)
     root.mainloop()
 
 if __name__ == "__main__":
