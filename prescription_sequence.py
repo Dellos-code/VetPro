@@ -1,173 +1,289 @@
-import datetime
-from typing import List
+"""
+Υλοποίηση της λογικής του Sequence Diagram για τη Συνταγογράφηση,
+χρησιμοποιώντας ΜΟΝΟ τις κλάσεις που εμφανίζονται στο διάγραμμα.
+"""
 
-# ==========================================
-# 1. ΟΡΙΣΜΟΣ ΚΛΑΣΕΩΝ ΑΠΟ ΤΟ CLASS DIAGRAM
-# ==========================================
+class DrugCatalog:
+    """Ο κατάλογος φαρμάκων (Entity/Database)"""
+    def __init__(self):
+        # Εικονικά δεδομένα φαρμάκων για τον κατάλογο
+        self.drugs = [
+            {"name": "Amoxil", "type": "Χάπι"},
+            {"name": "Rimadyl", "type": "Χάπι"},
+            {"name": "Bravecto", "type": "Μασώμενο"}
+        ]
 
-class Medication:
-    """Οντότητα Φαρμάκου (από το πακέτο Entities)"""
-    def __init__(self, id: str, name: str, type: str, activeIngredient: str):
-        self.id = id
-        self.name = name
-        self.type = type
-        self.activeIngredient = activeIngredient
+    def findDrug(self, name: str):
+        print(f"  [DrugCatalog] Αναζήτηση φαρμάκου: '{name}'")
+        for drug in self.drugs:
+            if drug["name"].lower() == name.lower():
+                return drug
+        return None
 
-class Prescription:
-    """Οντότητα Συνταγής (από το πακέτο Entities)"""
-    def __init__(self, id: str, date: datetime.date, dosage: str, quantity: int, medication: Medication):
-        self.id = id
-        self.date = date
-        self.dosage = dosage
-        self.quantity = quantity
-        self.medication = medication
+class TempList:
+    """Η προσωρινή λίστα για τα φάρμακα πριν την τελική αποθήκευση"""
+    def __init__(self):
+        self.items = []
 
-    def savePermanently(self) -> None:
-        """Μέθοδος μόνιμης αποθήκευσης της συνταγής (όπως αναφέρεται στο 1ο διάγραμμα)"""
-        print(f"[MedRecord Entity]: Η συνταγή {self.id} για το φάρμακο '{self.medication.name}' αποθηκεύτηκε μόνιμα.")
+    def add(self, drug, quantity, dosage):
+        print(f"  [TempList] Προσθήκη φαρμάκου '{drug['name']}', ποσότητα: {quantity}, δοσολογία: '{dosage}'")
+        self.items.append({"drug": drug, "quantity": quantity, "dosage": dosage})
+        return "addConfirmation"
 
-class MedicalRecord:
-    """Αφηρημένη κλάση Ιατρικού Φακέλου"""
-    def __init__(self, id: str, date: datetime.date, notes: str):
-        self.id = id
-        self.date = date
-        self.notes = notes
+    def clearData(self):
+        print("  [TempList] Καθαρισμός προσωρινών δεδομένων")
+        self.items.clear()
+        return "OK"
 
-class Examination(MedicalRecord):
-    """Εξέταση που εκδίδει Συνταγές (ως το MedRecord Entity στο Sequence Diagram)"""
-    def __init__(self, id: str, date: datetime.date, notes: str, diagnosis: str):
-        super().__init__(id, date, notes)
-        self.diagnosis = diagnosis
-        self.prescriptions: List[Prescription] = []
+    def getData(self):
+        print("  [TempList] Ανάκτηση όλων των προσωρινών δεδομένων συνταγής")
+        return self.items
 
-    def save_prescription(self, prescription: Prescription) -> None:
-        """Συνδέει τη συνταγή με την εξέταση και την αποθηκεύει (MedRecordEntity : savePermanently)"""
-        self.prescriptions.append(prescription)
-        prescription.savePermanently()
+class MedRecordEntity:
+    """Η οντότητα του Ιατρικού Φακέλου / Εξέτασης που σώζει τη συνταγή"""
+    def savePermanently(self, prescriptionData):
+        print(f"  [MedRecordEntity] Μόνιμη αποθήκευση συνταγής με {len(prescriptionData)} φάρμακα:")
+        for item in prescriptionData:
+            print(f"    - Φάρμακο: {item['drug']['name']} | Ποσότητα: {item['quantity']} | Δοσολογία: {item['dosage']}")
+        return "saveSuccess"
 
-class User:
-    """Αφηρημένη κλάση Χρήστη"""
-    def __init__(self, id: str, username: str, email: str, role: str):
-        self.id = id
-        self.username = username
-        self.email = email
-        self.role = role
+class MedRecordScreen:
+    """Η οθόνη του ιατρικού φακέλου"""
+    def __init__(self):
+        self.prescription_form = None
 
-class Veterinarian(User):
-    """Ο Κτηνίατρος (Ο Actor στο Sequence Diagram)"""
-    def __init__(self, id: str, username: str, email: str):
-        super().__init__(id, username, email, "Veterinarian")
-        self.specialty = "Γενική Ιατρική"
+    def set_form(self, form):
+        self.prescription_form = form
 
-    # ==========================================
-    # 2. ΥΛΟΠΟΙΗΣΗ ΤΟΥ SEQUENCE DIAGRAM
-    # ==========================================
-    def createPrescription(self, animalId: str, current_examination: Examination, drug_catalog: List[Medication]) -> None:
-        """
-        Η κύρια μέθοδος που υλοποιεί τη ροή του Sequence Diagram
-        """
-        print(f"\n--- Εκκίνηση Συνταγογράφησης (selectCreatePrescription) για ζώο: {animalId} ---")
-        print("[Form]: Η φόρμα συνταγογράφησης (PrescriptionForm) εμφανίστηκε.\n")
+    def selectCreatePrescription(self):
+        print("[MedRecordScreen] Ο Κτηνίατρος επέλεξε δημιουργία συνταγής")
+        if self.prescription_form:
+            self.prescription_form.display()
+
+    def showMessageAndRedirect(self):
+        print("[MedRecordScreen] Ακύρωση - Ανακατεύθυνση στην προηγούμενη οθόνη")
+
+    def showSuccessMessageAndRedirect(self):
+        print("[MedRecordScreen] Επιτυχία - Η συνταγή καταχωρήθηκε! Ανακατεύθυνση")
+
+class Message:
+    """Κλάση για την εμφάνιση μηνυμάτων και παραθύρων επιβεβαίωσης"""
+    def __init__(self):
+        self.prescription_form = None
+        self.temp_list = None
+        self.med_record_screen = None
+
+    def set_references(self, form, temp_list, screen):
+        self.prescription_form = form
+        self.temp_list = temp_list
+        self.med_record_screen = screen
+
+    def display(self, text):
+        print(f"  [Message] Εμφάνιση μηνύματος: '{text}'")
+
+    def close(self):
+        print("  [Message] Κλείσιμο μηνύματος. (Επιστροφή OK στη φόρμα)")
+        if self.prescription_form:
+            self.prescription_form.resetForm()
+
+    def requestConfirmation(self, text):
+        print(f"  [Message] Παράθυρο επιβεβαίωσης: '{text}'")
+
+    def confirm(self):
+        print("  [Message] Ο χρήστης πάτησε 'Επιβεβαίωση'")
+        if self.temp_list:
+            response = self.temp_list.clearData()
+            if response == "OK" and self.med_record_screen:
+                self.med_record_screen.showMessageAndRedirect()
+
+class PrescriptionForm:
+    """Η φόρμα συνταγογράφησης (Boundary/View)"""
+    def __init__(self, drug_catalog, temp_list, med_record_entity):
+        self.drug_catalog = drug_catalog
+        self.temp_list = temp_list
+        self.med_record_entity = med_record_entity
+        self.message = None
+        self.med_record_screen = None
         
-        # Temp List: Προσωρινή λίστα για αποθήκευση των φαρμάκων πριν την τελική υποβολή
-        temp_list = []
-        
-        # loop: Για όσα φάρμακα επιθυμεί ο Κτηνίατρος (Βήματα 4-9)
-        while True:
-            search_name = input("Εισάγετε όνομα φαρμάκου (ή πατήστε Enter για συνέχεια/έξοδο): ").strip()
-            if not search_name:
-                break
-                
-            # Αναζήτηση φαρμάκου (DrugCatalog : findDrug(name))
-            found_drug = None
-            for drug in drug_catalog:
-                if drug.name.lower() == search_name.lower():
-                    found_drug = drug
-                    break
-            
-            if found_drug is None:
-                # Εναλλακτική Ροή 1: Το φάρμακο δε βρέθηκε
-                print("[Message]: Το φάρμακο δε βρέθηκε (Drug not found).")
-                print("[Form]: Γίνεται επαναφορά φόρμας (resetForm)...\n")
-            else:
-                # Βασική Ροή: Το φάρμακο βρέθηκε
-                print(f"[Drug Catalog]: Το φάρμακο '{found_drug.name}' βρέθηκε επιτυχώς.")
-                print("[Form]: Ανανέωση φόρμας (refreshForm).")
-                
-                try:
-                    # Εισαγωγή λεπτομερειών από τον κτηνίατρο (enterDetails)
-                    quantity = int(input("Εισάγετε Ποσότητα (Quantity): "))
-                    dosage = input("Εισάγετε Δοσολογία (Dosage): ")
-                    
-                    # Προσθήκη στην προσωρινή λίστα (TempList : add(drug, quantity, dosage))
-                    temp_list.append({
-                        "drug": found_drug,
-                        "quantity": quantity,
-                        "dosage": dosage
-                    })
-                    print("[Temp List]: Τα δεδομένα προστέθηκαν προσωρινά (addConfirmation).\n")
-                except ValueError:
-                    print("[Σφάλμα]: Παρακαλώ εισάγετε έγκυρο αριθμό για ποσότητα.\n")
+        self.current_drug = None
+        self.current_quantity = None
+        self.current_dosage = None
 
-        # Εάν δεν υπάρχουν φάρμακα, τερματίζουμε τη διαδικασία
-        if not temp_list:
-            print("[Σύστημα]: Δεν προστέθηκαν φάρμακα στη συνταγή. Ακύρωση διαδικασίας.")
-            return
+    def set_references(self, message, screen):
+        self.message = message
+        self.med_record_screen = screen
 
-        # Επιλογή του Κτηνιάτρου: Ακύρωση ή Υποβολή
-        action = input("Επιλέξτε (S)ubmit για Υποβολή Συνταγής, (C)ancel για Ακύρωση: ").strip().upper()
+    def display(self):
+        print("  [PrescriptionForm] Προβολή της φόρμας συνταγογράφησης")
+
+    def searchDrug(self, name):
+        print(f"  [PrescriptionForm] Λήψη αιτήματος αναζήτησης φαρμάκου: {name}")
+        drugData = self.drug_catalog.findDrug(name)
         
-        if action == 'C':
-            # Εναλλακτική Ροή 2: Ακύρωση Διαδικασίας (cancel)
-            confirm = input("[Message]: Είστε σίγουροι; (Are you sure?) (Y/N): ").strip().upper()
-            if confirm == 'Y':
-                temp_list.clear() # TempList : clearData()
-                print("[Temp List]: Διαγραφή δεδομένων προσωρινής λίστας (OK).")
-                print("[MedRecordScreen]: Ακύρωση επιτυχής. Ανακατεύθυνση (showMessageAndRedirect).")
-            else:
-                print("[Σύστημα]: Η ακύρωση διεκόπη.")
-                
-        elif action == 'S':
-            # Βασική Ροή: Καταχώρηση Συνταγής (submitPrescription)
-            print("\n[Temp List]: Ανάκτηση δεδομένων συνταγής (getData)...")
-            
-            # Για κάθε φάρμακο στη λίστα, δημιουργούμε το αντικείμενο Prescription και το σώζουμε
-            for idx, item in enumerate(temp_list):
-                # Δημιουργία μοναδικού ID
-                presc_id = f"PRES-{datetime.datetime.now().strftime('%H%M%S')}-{idx}"
-                
-                new_prescription = Prescription(
-                    id=presc_id,
-                    date=datetime.date.today(),
-                    dosage=item["dosage"],
-                    quantity=item["quantity"],
-                    medication=item["drug"]
-                )
-                
-                # MedRecordEntity : savePermanently(prescriptionData)
-                current_examination.save_prescription(new_prescription)
-                
-            print("\n[MedRecordEntity]: Επιτυχής αποθήκευση (saveSuccess).")
-            print("[MedRecordScreen]: Η συνταγή καταχωρήθηκε! Ανακατεύθυνση (showSuccessMessageAndRedirect).")
+        if drugData is None:
+            # Εναλλακτική ροή 1: Φάρμακο δε βρέθηκε
+            if self.message:
+                self.message.display("Drug not found")
         else:
-            print("[Σφάλμα]: Μη έγκυρη ενέργεια.")
+            # Βασική ροή: Φάρμακο βρέθηκε
+            self.current_drug = drugData
+            self.refreshForm()
+
+    def resetForm(self):
+        print("  [PrescriptionForm] Επαναφορά της φόρμας")
+        self.current_drug = None
+
+    def refreshForm(self):
+        print("  [PrescriptionForm] Ανανέωση φόρμας με τα δεδομένα του επιλεγμένου φαρμάκου")
+
+    def selectDrug(self):
+        print("  [PrescriptionForm] Επιβεβαίωση επιλογής φαρμάκου από τη λίστα")
+
+    def enterDetails(self, quantity, dosage):
+        print(f"  [PrescriptionForm] Λήψη λεπτομερειών: ποσότητα={quantity}, δοσολογία='{dosage}'")
+        self.current_quantity = quantity
+        self.current_dosage = dosage
+
+    def addDrug(self):
+        print("  [PrescriptionForm] Αίτημα προσθήκης του φαρμάκου στην προσωρινή λίστα")
+        if self.current_drug:
+            confirmation = self.temp_list.add(self.current_drug, self.current_quantity, self.current_dosage)
+            if confirmation == "addConfirmation":
+                print("  [PrescriptionForm] Επιτυχής προσθήκη - Λήψη επιβεβαίωσης 'addConfirmation'")
+
+    def cancel(self):
+        print("  [PrescriptionForm] Λήψη αιτήματος ακύρωσης διαδικασίας")
+        if self.message:
+            self.message.requestConfirmation("Are you sure?")
+
+    def submitPrescription(self):
+        print("  [PrescriptionForm] Λήψη αιτήματος υποβολής συνταγής")
+        prescriptionData = self.temp_list.getData()
+        
+        response = self.med_record_entity.savePermanently(prescriptionData)
+        if response == "saveSuccess":
+            if self.med_record_screen:
+                self.med_record_screen.showSuccessMessageAndRedirect()
+
+
+class Veterinarian:
+    """Ο Actor 'Κτηνίατρος' που αλληλεπιδρά με το σύστημα βάσει του Sequence Diagram"""
+    def __init__(self, med_record_screen, prescription_form, message):
+        self.med_record_screen = med_record_screen
+        self.prescription_form = prescription_form
+        self.message = message
+
+    # ===============================================
+    # Ενέργειες που πυροδοτεί ο Actor στο σύστημα
+    # ===============================================
+    def action_selectCreatePrescription(self):
+        print("\n[ACTOR] Ο Κτηνίατρος πατάει 'Δημιουργία Συνταγής' (selectCreatePrescription)")
+        self.med_record_screen.selectCreatePrescription()
+
+    def action_searchDrug(self, name):
+        print(f"\n[ACTOR] Ο Κτηνίατρος αναζητά το φάρμακο '{name}' (searchDrug)")
+        self.prescription_form.searchDrug(name)
+
+    def action_closeMessage(self):
+        print("\n[ACTOR] Ο Κτηνίατρος κλείνει το αναδυόμενο μήνυμα (close)")
+        self.message.close()
+
+    def action_selectDrug(self):
+        print("\n[ACTOR] Ο Κτηνίατρος επιλέγει το βρεθέν φάρμακο (selectDrug)")
+        self.prescription_form.selectDrug()
+
+    def action_enterDetails(self, quantity, dosage):
+        print(f"\n[ACTOR] Ο Κτηνίατρος πληκτρολογεί ποσότητα={quantity}, δοσολογία='{dosage}' (enterDetails)")
+        self.prescription_form.enterDetails(quantity, dosage)
+
+    def action_addDrug(self):
+        print("\n[ACTOR] Ο Κτηνίατρος πατάει το κουμπί 'Προσθήκη' (addDrug)")
+        self.prescription_form.addDrug()
+
+    def action_cancel(self):
+        print("\n[ACTOR] Ο Κτηνίατρος πατάει το κουμπί 'Ακύρωση' (cancel)")
+        self.prescription_form.cancel()
+
+    def action_confirm(self):
+        print("\n[ACTOR] Ο Κτηνίατρος επιβεβαιώνει την ακύρωση στο παράθυρο διαλόγου (confirm)")
+        self.message.confirm()
+
+    def action_submitPrescription(self):
+        print("\n[ACTOR] Ο Κτηνίατρος πατάει το κουμπί 'Καταχώρηση Συνταγής' (submitPrescription)")
+        self.prescription_form.submitPrescription()
+
 
 # ==========================================
-# 3. ΠΑΡΑΔΕΙΓΜΑ ΕΚΤΕΛΕΣΗΣ ΚΩΔΙΚΑ
+# ΣΕΝΑΡΙΑ ΕΚΤΕΛΕΣΗΣ ΓΙΑ ΕΠΙΔΕΙΞΗ
 # ==========================================
+def main():
+    # 1. Αρχικοποίηση όλων των αντικειμένων του διαγράμματος
+    drug_catalog = DrugCatalog()
+    temp_list = TempList()
+    med_record_entity = MedRecordEntity()
+    
+    med_record_screen = MedRecordScreen()
+    message = Message()
+    
+    prescription_form = PrescriptionForm(drug_catalog, temp_list, med_record_entity)
+    
+    # 2. Σύνδεση εξαρτήσεων (Dependency Injection)
+    med_record_screen.set_form(prescription_form)
+    prescription_form.set_references(message, med_record_screen)
+    message.set_references(prescription_form, temp_list, med_record_screen)
+    
+    # Ο Actor
+    vet = Veterinarian(med_record_screen, prescription_form, message)
+
+    # ---------------------------------------------------------
+    print("\n" + "="*60)
+    print(" ΣΕΝΑΡΙΟ 1: ΒΑΣΙΚΗ ΡΟΗ & ΕΝΑΛΛΑΚΤΙΚΗ 1 (ΦΑΡΜΑΚΟ ΔΕ ΒΡΕΘΗΚΕ)")
+    print("="*60)
+    
+    # Ξεκινάει η συνταγογράφηση
+    vet.action_selectCreatePrescription()
+    
+    # Εναλλακτική Ροή 1: Φάρμακο που δεν υπάρχει
+    vet.action_searchDrug("Panadol")
+    vet.action_closeMessage()
+    
+    # Βασική Ροή: Φάρμακο που υπάρχει
+    vet.action_searchDrug("Amoxil")
+    vet.action_selectDrug()
+    vet.action_enterDetails(quantity=2, dosage="1 χάπι ανά 12 ώρες")
+    vet.action_addDrug()
+
+    # Προσθήκη δεύτερου φαρμάκου
+    vet.action_searchDrug("Bravecto")
+    vet.action_selectDrug()
+    vet.action_enterDetails(quantity=1, dosage="1 μασώμενο κάθε 3 μήνες")
+    vet.action_addDrug()
+    
+    # Καταχώρηση (Βασική Ροή - Τέλος)
+    vet.action_submitPrescription()
+
+    # ---------------------------------------------------------
+    print("\n\n" + "="*60)
+    print(" ΣΕΝΑΡΙΟ 2: ΕΝΑΛΛΑΚΤΙΚΗ ΡΟΗ 2 (ΑΚΥΡΩΣΗ ΔΙΑΔΙΚΑΣΙΑΣ)")
+    print("="*60)
+    
+    # Εκκαθάριση της προσωρινής λίστας για τη νέα δοκιμή
+    temp_list.clearData()
+    
+    # Ξεκινάει νέα συνταγογράφηση
+    vet.action_selectCreatePrescription()
+    
+    # Βρίσκει φάρμακο και προσθέτει
+    vet.action_searchDrug("Rimadyl")
+    vet.action_selectDrug()
+    vet.action_enterDetails(quantity=1, dosage="Μισό χάπι την ημέρα")
+    vet.action_addDrug()
+    
+    # Ακύρωση της διαδικασίας από τον Κτηνίατρο
+    vet.action_cancel()
+    
+    # Επιβεβαίωση της ακύρωσης στο αναδυόμενο μήνυμα
+    vet.action_confirm()
+
 if __name__ == "__main__":
-    # Δημιουργία υποθετικού καταλόγου φαρμάκων (Drug Catalog)
-    catalog = [
-        Medication("M01", "Amoxil", "Χάπι", "Αμοξικιλλίνη"),
-        Medication("M02", "Rimadyl", "Χάπι", "Καρπροφαίνη"),
-        Medication("M03", "Bravecto", "Μασώμενο", "Fluralaner")
-    ]
-    
-    # Δημιουργία Κτηνιάτρου
-    vet = Veterinarian("V101", "Dr. Papadopoulos", "vet@clinic.gr")
-    
-    # Δημιουργία μιας τρέχουσας Εξέτασης (ως το MedRecord Entity που θα δεχθεί τις συνταγές)
-    exam = Examination("EX-205", datetime.date.today(), "Ο σκύλος παρουσιάζει λοίμωξη.", "Βακτηριακή Λοίμωξη")
-    
-    # Κλήση της λειτουργίας
-    vet.createPrescription(animalId="DOG-552", current_examination=exam, drug_catalog=catalog)
+    main()
