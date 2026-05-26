@@ -1,4 +1,7 @@
 import tkinter as tk
+from tkinter import messagebox
+import sqlite3
+import os
 
 class LoginScreen:
     def __init__(self, root):
@@ -68,7 +71,8 @@ class LoginScreen:
             padx=10,
             pady=8,
             cursor="hand2",
-            activebackground="#3D7FBF"
+            activebackground="#3D7FBF",
+            command=self.login
         )
         login_btn.pack(pady=10)
         
@@ -88,6 +92,67 @@ class LoginScreen:
             command=self.open_register
         )
         register_btn.pack(pady=(0, 10))
+
+    def get_db_path(self):
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        return os.path.join(current_dir, '..', 'vetpro.db')
+
+    def login(self):
+        username = self.username_entry.get().strip()
+        password = self.password_entry.get().strip()
+        
+        if not username or not password:
+            messagebox.showwarning("Ελλιπή Στοιχεία", "Παρακαλώ συμπληρώστε Όνομα Χρήστη και Κωδικό Πρόσβασης.")
+            return
+            
+        try:
+            conn = sqlite3.connect(self.get_db_path())
+            cursor = conn.cursor()
+            
+            cursor.execute("SELECT * FROM users WHERE username=? AND password=?", (username, password))
+            user = cursor.fetchone()
+            
+            conn.close()
+            
+            if user:
+                role = user[6]
+                
+                self.root.withdraw() # Κρύβουμε το login
+                new_window = tk.Toplevel(self.root)
+                
+                # Αν κλείσει το νέο παράθυρο, να κλείσει όλη η εφαρμογή
+                def on_close():
+                    self.root.destroy()
+                new_window.protocol("WM_DELETE_WINDOW", on_close)
+                
+                if role == "Κτηνίατρος":
+                    try:
+                        from vet_home_screen import VetHomeScreen
+                    except ImportError:
+                        from application.vet_home_screen import VetHomeScreen
+                    VetHomeScreen(new_window)
+                    
+                elif role == "Ρεσεψιόν":
+                    try:
+                        from reception_home_screen import ReceptionHomeScreen
+                    except ImportError:
+                        from application.reception_home_screen import ReceptionHomeScreen
+                    ReceptionHomeScreen(new_window)
+                    
+                elif role == "Ιδιοκτήτης Κατοικίδιου":
+                    try:
+                        from owner_home_screen import OwnerHomeScreen
+                    except ImportError:
+                        from application.owner_home_screen import OwnerHomeScreen
+                    OwnerHomeScreen(new_window)
+                else:
+                    messagebox.showerror("Σφάλμα Ρόλου", "Μη αναγνωρίσιμος ρόλος χρήστη.")
+                    self.root.deiconify() # Εμφάνιση του login ξανά
+            else:
+                messagebox.showerror("Λάθος Στοιχεία", "Το Όνομα Χρήστη ή ο Κωδικός Πρόσβασης είναι λάθος.")
+                
+        except sqlite3.Error as e:
+            messagebox.showerror("Σφάλμα Βάσης Δεδομένων", f"Συνέβη ένα σφάλμα: {e}")
 
     def open_register(self):
         register_window = tk.Toplevel(self.root)

@@ -1,5 +1,8 @@
 import tkinter as tk
 from tkinter import ttk
+from tkinter import messagebox
+import sqlite3
+import os
 
 class RegisterScreen:
     def __init__(self, root):
@@ -7,6 +10,8 @@ class RegisterScreen:
         self.root.title("VetPro - Εγγραφή Νέου Χρήστη")
         self.root.geometry("450x680")
         self.root.configure(bg="#87CEEB")
+        
+        self.setup_database()
         
         # Center frame
         center_frame = tk.Frame(root, bg="#87CEEB")
@@ -130,7 +135,7 @@ class RegisterScreen:
         self.role_combobox.current(0)  # Default value
         self.role_combobox.pack(padx=20, pady=(0, 20))
         
-        # Register button (Non-functional as requested)
+        # Register button
         register_btn = tk.Button(
             center_frame,
             text="Δημιουργία Λογαριασμού",
@@ -142,9 +147,82 @@ class RegisterScreen:
             padx=10,
             pady=8,
             cursor="hand2",
-            activebackground="#3D7FBF"
+            activebackground="#3D7FBF",
+            command=self.register_user
         )
         register_btn.pack(pady=10)
+
+    def get_db_path(self):
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        return os.path.join(current_dir, '..', 'vetpro.db')
+
+    def setup_database(self):
+        try:
+            conn = sqlite3.connect(self.get_db_path())
+            cursor = conn.cursor()
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    fullname TEXT NOT NULL,
+                    email TEXT NOT NULL UNIQUE,
+                    phone TEXT,
+                    username TEXT NOT NULL UNIQUE,
+                    password TEXT NOT NULL,
+                    role TEXT NOT NULL
+                )
+            ''')
+            conn.commit()
+            conn.close()
+        except sqlite3.Error as e:
+            messagebox.showerror("Σφάλμα Βάσης Δεδομένων", f"Αποτυχία δημιουργίας βάσης: {e}")
+
+    def register_user(self):
+        fullname = self.fullname_entry.get().strip()
+        email = self.email_entry.get().strip()
+        phone = self.phone_entry.get().strip()
+        username = self.username_entry.get().strip()
+        password = self.password_entry.get().strip()
+        role = self.role_var.get()
+
+        if not fullname or not email or not username or not password or not role:
+            messagebox.showwarning("Ελλιπή Στοιχεία", "Παρακαλώ συμπληρώστε όλα τα υποχρεωτικά πεδία (Ονοματεπώνυμο, Email, Όνομα Χρήστη, Κωδικός, Ρόλος).")
+            return
+
+        try:
+            conn = sqlite3.connect(self.get_db_path())
+            cursor = conn.cursor()
+            
+            # Ελέγχουμε αν υπάρχει ήδη ο χρήστης με το ίδιο username ή email
+            cursor.execute("SELECT * FROM users WHERE username=? OR email=?", (username, email))
+            existing_user = cursor.fetchone()
+            
+            if existing_user:
+                messagebox.showerror("Σφάλμα Εγγραφής", "Το Όνομα Χρήστη ή το Email υπάρχει ήδη. Παρακαλώ επιλέξτε διαφορετικά.")
+                conn.close()
+                return
+
+            cursor.execute('''
+                INSERT INTO users (fullname, email, phone, username, password, role)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (fullname, email, phone, username, password, role))
+            
+            conn.commit()
+            conn.close()
+            
+            messagebox.showinfo("Επιτυχία", "Η εγγραφή ολοκληρώθηκε με επιτυχία!")
+            
+            # Καθαρισμός πεδίων μετά από επιτυχή εγγραφή
+            self.fullname_entry.delete(0, tk.END)
+            self.email_entry.delete(0, tk.END)
+            self.phone_entry.delete(0, tk.END)
+            self.username_entry.delete(0, tk.END)
+            self.password_entry.delete(0, tk.END)
+            self.role_combobox.current(0)
+            
+        except sqlite3.IntegrityError:
+            messagebox.showerror("Σφάλμα", "Υπήρξε πρόβλημα με την εγγραφή (πιθανώς διπλότυπη εγγραφή).")
+        except sqlite3.Error as e:
+            messagebox.showerror("Σφάλμα Βάσης Δεδομένων", f"Συνέβη ένα σφάλμα: {e}")
 
 
 def main():
