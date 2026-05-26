@@ -154,7 +154,7 @@ class RegisterScreen:
 
     def get_db_path(self):
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        return os.path.join(current_dir, '..', 'vetpro.db')
+        return os.path.join(current_dir, 'vetpro.db')
 
     def setup_database(self):
         try:

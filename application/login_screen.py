@@ -95,7 +95,7 @@ class LoginScreen:
 
     def get_db_path(self):
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        return os.path.join(current_dir, '..', 'vetpro.db')
+        return os.path.join(current_dir, 'vetpro.db')
 
     def login(self):
         username = self.username_entry.get().strip()
