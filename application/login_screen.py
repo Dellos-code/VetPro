@@ -7,7 +7,7 @@ class LoginScreen:
     def __init__(self, root):
         self.root = root
         self.root.title("VetPro - Login")
-        self.root.geometry("400x380")
+        self.root.geometry("400x420")
         self.root.configure(bg="#87CEEB")
         
         # Center frame
@@ -93,6 +93,21 @@ class LoginScreen:
         )
         register_btn.pack(pady=(0, 10))
 
+        # Delete Account button
+        delete_btn = tk.Button(
+            center_frame,
+            text="Διαγραφή Λογαριασμού",
+            font=("Arial", 10, "underline"),
+            bg="#87CEEB",
+            fg="#CC0000",
+            border=0,
+            cursor="hand2",
+            activebackground="#87CEEB",
+            activeforeground="#990000",
+            command=self.open_delete_account
+        )
+        delete_btn.pack(pady=(10, 10))
+
     def get_db_path(self):
         current_dir = os.path.dirname(os.path.abspath(__file__))
         return os.path.join(current_dir, 'vetpro.db')
@@ -161,6 +176,14 @@ class LoginScreen:
         except ImportError:
             from application.register_screen import RegisterScreen
         RegisterScreen(register_window)
+
+    def open_delete_account(self):
+        delete_window = tk.Toplevel(self.root)
+        try:
+            from delete_account_screen import DeleteAccountScreen
+        except ImportError:
+            from application.delete_account_screen import DeleteAccountScreen
+        DeleteAccountScreen(delete_window)
 
 
 def main():
