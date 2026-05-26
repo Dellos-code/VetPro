@@ -144,7 +144,7 @@ class LoginScreen:
                         from owner_home_screen import OwnerHomeScreen
                     except ImportError:
                         from application.owner_home_screen import OwnerHomeScreen
-                    OwnerHomeScreen(new_window)
+                    OwnerHomeScreen(new_window, fullname=user[1])
                 else:
                     messagebox.showerror("Σφάλμα Ρόλου", "Μη αναγνωρίσιμος ρόλος χρήστη.")
                     self.root.deiconify() # Εμφάνιση του login ξανά

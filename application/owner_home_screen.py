@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import font as tkfont
 
 class OwnerHomeScreen:
-    def __init__(self, root):
+    def __init__(self, root, fullname=""):
         self.root = root
         self.root.title("VetPro - Αρχική Ιδιοκτήτη")
         self.root.geometry("850x500")
@@ -56,9 +56,10 @@ class OwnerHomeScreen:
         
         # Greeting text
         greeting_font = tkfont.Font(family="Consolas", size=14, weight="bold")
+        greeting_text = f"Γεια σου, {fullname}" if fullname else "Γεια σου, <name>"
         self.greeting_label = tk.Label(
             self.main_frame,
-            text="Γεια σου, <name>",
+            text=greeting_text,
             font=greeting_font,
             bg="#D3D3D3",
             fg="black"
