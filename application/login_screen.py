@@ -1,108 +1,107 @@
 import tkinter as tk
+from tkinter import messagebox
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from database.db_setup import get_connection
+from utils.ui_helpers import COLORS
 
 class LoginScreen:
     def __init__(self, root):
         self.root = root
-        self.root.title("VetPro - Login")
-        self.root.geometry("400x380")
-        self.root.configure(bg="#87CEEB")
-        
-        # Center frame
-        center_frame = tk.Frame(root, bg="#87CEEB")
-        center_frame.pack(expand=True)
-        
-        # Logo
-        logo_label = tk.Label(
-            center_frame,
-            text="🐾 VetPro",
-            font=("Arial", 28, "bold"),
-            bg="#87CEEB",
-            fg="#4169E1"
-        )
-        logo_label.pack(pady=(0, 30))
-        
-        # Username label and entry
-        username_label = tk.Label(
-            center_frame,
-            text="Όνομα Χρήστη:",
-            font=("Arial", 11),
-            bg="#87CEEB",
-            fg="#333333"
-        )
-        username_label.pack(anchor=tk.W, padx=20, pady=(10, 0))
-        
-        self.username_entry = tk.Entry(
-            center_frame,
-            font=("Arial", 11),
-            width=25
-        )
-        self.username_entry.pack(padx=20, pady=(0, 15))
-        
-        # Password label and entry
-        password_label = tk.Label(
-            center_frame,
-            text="Κωδικός Πρόσβασης:",
-            font=("Arial", 11),
-            bg="#87CEEB",
-            fg="#333333"
-        )
-        password_label.pack(anchor=tk.W, padx=20, pady=(10, 0))
-        
-        self.password_entry = tk.Entry(
-            center_frame,
-            font=("Arial", 11),
-            width=25,
-            show="*"
-        )
-        self.password_entry.pack(padx=20, pady=(0, 20))
-        
-        # Login button
-        login_btn = tk.Button(
-            center_frame,
-            text="Σύνδεση",
-            font=("Arial", 12, "bold"),
-            bg="#4DA6FF",
-            fg="white",
-            width=25,
-            border=0,
-            padx=10,
-            pady=8,
-            cursor="hand2",
-            activebackground="#3D7FBF"
-        )
-        login_btn.pack(pady=10)
-        
-        # Register button
-        register_btn = tk.Button(
-            center_frame,
-            text="Εγγραφή",
-            font=("Arial", 12, "bold"),
-            bg="#28A745",
-            fg="white",
-            width=25,
-            border=0,
-            padx=10,
-            pady=8,
-            cursor="hand2",
-            activebackground="#218838",
-            command=self.open_register
-        )
-        register_btn.pack(pady=(0, 10))
+        self.root.title("VetPro - Σύνδεση")
+        self.root.geometry("420x460")
+        self.root.configure(bg=COLORS["sidebar"])
+        self.root.resizable(False, False)
+        self._build()
 
-    def open_register(self):
-        register_window = tk.Toplevel(self.root)
+    def _build(self):
+        cf = tk.Frame(self.root, bg=COLORS["sidebar"])
+        cf.pack(expand=True)
+
+        tk.Label(cf, text="🐾 VetPro", font=("Arial", 30, "bold"),
+                 bg=COLORS["sidebar"], fg="#4169E1").pack(pady=(0, 6))
+        tk.Label(cf, text="Κτηνιατρικό Σύστημα Διαχείρισης",
+                 font=("Arial", 10), bg=COLORS["sidebar"], fg="#555").pack(pady=(0, 24))
+
+        for lbl, attr, show in [
+            ("Όνομα Χρήστη:", "username_entry", ""),
+            ("Κωδικός:",      "password_entry", "*"),
+        ]:
+            tk.Label(cf, text=lbl, font=("Arial", 11),
+                     bg=COLORS["sidebar"], anchor="w").pack(anchor="w", padx=30)
+            e = tk.Entry(cf, font=("Arial", 11), width=28, show=show)
+            e.pack(padx=30, pady=(0, 12))
+            setattr(self, attr, e)
+
+        self.password_entry.bind("<Return>", lambda e: self._login())
+
+        tk.Button(cf, text="Σύνδεση", command=self._login,
+                  bg=COLORS["btn_blue"], fg="white",
+                  font=("Arial", 12, "bold"), width=24,
+                  bd=0, pady=8, cursor="hand2").pack(pady=6)
+
+        tk.Button(cf, text="Εγγραφή Νέου Χρήστη", command=self._open_register,
+                  bg=COLORS["btn_green"], fg="white",
+                  font=("Arial", 11, "bold"), width=24,
+                  bd=0, pady=6, cursor="hand2").pack(pady=4)
+
+        tk.Button(cf, text="Διαγραφή Λογαριασμού",
+                  command=self._open_delete,
+                  bg=COLORS["sidebar"], fg="#CC0000",
+                  font=("Arial", 9, "underline"), bd=0,
+                  cursor="hand2").pack(pady=(10, 0))
+
+        tk.Label(cf, text="Demo: vet1/1234 | rec1/1234 | owner1/1234",
+                 font=("Arial", 8), bg=COLORS["sidebar"], fg="#666").pack(pady=(14, 0))
+
+    def _login(self):
+        username = self.username_entry.get().strip()
+        password = self.password_entry.get().strip()
+        if not username or not password:
+            messagebox.showwarning("Ελλιπή Στοιχεία", "Συμπληρώστε όνομα χρήστη και κωδικό.")
+            return
         try:
-            from register_screen import RegisterScreen
-        except ImportError:
-            from application.register_screen import RegisterScreen
-        RegisterScreen(register_window)
+            conn = get_connection()
+            user = conn.execute(
+                "SELECT * FROM users WHERE username=? AND password=?",
+                (username, password)
+            ).fetchone()
+            conn.close()
+        except Exception as e:
+            messagebox.showerror("Σφάλμα ΒΔ", str(e))
+            return
 
+        if not user:
+            messagebox.showerror("Σφάλμα", "Λάθος στοιχεία σύνδεσης.")
+            return
 
-def main():
-    root = tk.Tk()
-    app = LoginScreen(root)
-    root.mainloop()
+        self.root.withdraw()
+        new_win = tk.Toplevel(self.root)
+        new_win.protocol("WM_DELETE_WINDOW", self.root.destroy)
 
+        role = user["role"]
+        uid  = user["id"]
 
-if __name__ == "__main__":
-    main()
+        if role == "Κτηνίατρος":
+            from screens.vet_screen import VetScreen
+            VetScreen(new_win, uid)
+        elif role == "Ρεσεψιόν":
+            from screens.reception_screen import ReceptionScreen
+            ReceptionScreen(new_win, uid)
+        elif role == "Ιδιοκτήτης Κατοικίδιου":
+            from screens.owner_screen import OwnerScreen
+            OwnerScreen(new_win, uid)
+        else:
+            messagebox.showerror("Σφάλμα", f"Άγνωστος ρόλος: {role}")
+            self.root.deiconify()
+
+    def _open_register(self):
+        w = tk.Toplevel(self.root)
+        from screens.register_screen import RegisterScreen
+        RegisterScreen(w)
+
+    def _open_delete(self):
+        w = tk.Toplevel(self.root)
+        from screens.delete_screen import DeleteScreen
+        DeleteScreen(w)
