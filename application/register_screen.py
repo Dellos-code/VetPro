@@ -1,157 +1,70 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from database.db_setup import get_connection
+from utils.ui_helpers import COLORS
 
 class RegisterScreen:
     def __init__(self, root):
         self.root = root
-        self.root.title("VetPro - Εγγραφή Νέου Χρήστη")
-        self.root.geometry("450x680")
-        self.root.configure(bg="#87CEEB")
-        
-        # Center frame
-        center_frame = tk.Frame(root, bg="#87CEEB")
-        center_frame.pack(expand=True)
-        
-        # Logo or Title
-        title_label = tk.Label(
-            center_frame,
-            text="🐾 Νέος Λογαριασμός",
-            font=("Arial", 24, "bold"),
-            bg="#87CEEB",
-            fg="#4169E1"
-        )
-        title_label.pack(pady=(0, 20))
-        
-        # Full Name label and entry
-        fullname_label = tk.Label(
-            center_frame,
-            text="Ονοματεπώνυμο:",
-            font=("Arial", 11),
-            bg="#87CEEB",
-            fg="#333333"
-        )
-        fullname_label.pack(anchor=tk.W, padx=20, pady=(5, 0))
-        
-        self.fullname_entry = tk.Entry(
-            center_frame,
-            font=("Arial", 11),
-            width=30
-        )
-        self.fullname_entry.pack(padx=20, pady=(0, 10))
-        
-        # Email label and entry
-        email_label = tk.Label(
-            center_frame,
-            text="Email:",
-            font=("Arial", 11),
-            bg="#87CEEB",
-            fg="#333333"
-        )
-        email_label.pack(anchor=tk.W, padx=20, pady=(5, 0))
-        
-        self.email_entry = tk.Entry(
-            center_frame,
-            font=("Arial", 11),
-            width=30
-        )
-        self.email_entry.pack(padx=20, pady=(0, 10))
-        
-        # Mobile Phone label and entry
-        phone_label = tk.Label(
-            center_frame,
-            text="Κινητό:",
-            font=("Arial", 11),
-            bg="#87CEEB",
-            fg="#333333"
-        )
-        phone_label.pack(anchor=tk.W, padx=20, pady=(5, 0))
-        
-        self.phone_entry = tk.Entry(
-            center_frame,
-            font=("Arial", 11),
-            width=30
-        )
-        self.phone_entry.pack(padx=20, pady=(0, 10))
+        self.root.title("VetPro - Εγγραφή")
+        self.root.geometry("440x580")
+        self.root.configure(bg=COLORS["sidebar"])
+        self._build()
 
-        # Username label and entry
-        username_label = tk.Label(
-            center_frame,
-            text="Όνομα Χρήστη:",
-            font=("Arial", 11),
-            bg="#87CEEB",
-            fg="#333333"
-        )
-        username_label.pack(anchor=tk.W, padx=20, pady=(5, 0))
-        
-        self.username_entry = tk.Entry(
-            center_frame,
-            font=("Arial", 11),
-            width=30
-        )
-        self.username_entry.pack(padx=20, pady=(0, 10))
-        
-        # Password label and entry
-        password_label = tk.Label(
-            center_frame,
-            text="Κωδικός Πρόσβασης:",
-            font=("Arial", 11),
-            bg="#87CEEB",
-            fg="#333333"
-        )
-        password_label.pack(anchor=tk.W, padx=20, pady=(5, 0))
-        
-        self.password_entry = tk.Entry(
-            center_frame,
-            font=("Arial", 11),
-            width=30,
-            show="*"
-        )
-        self.password_entry.pack(padx=20, pady=(0, 10))
-        
-        # Role label and combobox
-        role_label = tk.Label(
-            center_frame,
-            text="Επιλογή Ρόλου:",
-            font=("Arial", 11),
-            bg="#87CEEB",
-            fg="#333333"
-        )
-        role_label.pack(anchor=tk.W, padx=20, pady=(5, 0))
-        
-        self.role_var = tk.StringVar()
-        self.role_combobox = ttk.Combobox(
-            center_frame,
-            textvariable=self.role_var,
-            font=("Arial", 11),
-            width=28,
-            state="readonly"
-        )
-        self.role_combobox['values'] = ("Κτηνίατρος", "Ρεσεψιόν", "Ιδιοκτήτης Κατοικίδιου")
-        self.role_combobox.current(0)  # Default value
-        self.role_combobox.pack(padx=20, pady=(0, 20))
-        
-        # Register button (Non-functional as requested)
-        register_btn = tk.Button(
-            center_frame,
-            text="Δημιουργία Λογαριασμού",
-            font=("Arial", 12, "bold"),
-            bg="#4DA6FF",
-            fg="white",
-            width=25,
-            border=0,
-            padx=10,
-            pady=8,
-            cursor="hand2",
-            activebackground="#3D7FBF"
-        )
-        register_btn.pack(pady=10)
+    def _build(self):
+        cf = tk.Frame(self.root, bg=COLORS["sidebar"])
+        cf.pack(expand=True, fill="both", padx=30, pady=20)
 
+        tk.Label(cf, text="🐾 Νέος Λογαριασμός", font=("Arial", 20, "bold"),
+                 bg=COLORS["sidebar"], fg="#4169E1").pack(pady=(0, 16))
 
-def main():
-    root = tk.Tk()
-    app = RegisterScreen(root)
-    root.mainloop()
+        fields = [
+            ("Ονοματεπώνυμο:", "fullname",  ""),
+            ("Email:",          "email",     ""),
+            ("Κινητό:",         "phone",     ""),
+            ("Όνομα Χρήστη:",  "username",  ""),
+            ("Κωδικός:",        "password",  "*"),
+        ]
+        self.vars = {}
+        for lbl, key, show in fields:
+            tk.Label(cf, text=lbl, font=("Arial", 10), bg=COLORS["sidebar"], anchor="w").pack(anchor="w")
+            v = tk.StringVar()
+            tk.Entry(cf, textvariable=v, font=("Arial", 11), width=32, show=show).pack(pady=(0, 8))
+            self.vars[key] = v
 
+        tk.Label(cf, text="Ρόλος:", font=("Arial", 10), bg=COLORS["sidebar"], anchor="w").pack(anchor="w")
+        self.role_var = tk.StringVar(value="Κτηνίατρος")
+        ttk.Combobox(cf, textvariable=self.role_var, width=30, state="readonly",
+                     values=["Κτηνίατρος", "Ρεσεψιόν", "Ιδιοκτήτης Κατοικίδιου"]
+                     ).pack(pady=(0, 16))
 
-if __name__ == "__main__":
-    main()
+        tk.Button(cf, text="Δημιουργία Λογαριασμού", command=self._register,
+                  bg=COLORS["btn_blue"], fg="white", font=("Arial", 11, "bold"),
+                  width=26, bd=0, pady=7, cursor="hand2").pack()
+
+    def _register(self):
+        v = {k: var.get().strip() for k, var in self.vars.items()}
+        role = self.role_var.get()
+        if not all([v["fullname"], v["email"], v["username"], v["password"]]):
+            messagebox.showwarning("Ελλιπή", "Συμπληρώστε όλα τα υποχρεωτικά πεδία.")
+            return
+        try:
+            conn = get_connection()
+            conn.execute(
+                "INSERT INTO users (fullname,email,phone,username,password,role) VALUES (?,?,?,?,?,?)",
+                (v["fullname"], v["email"], v["phone"], v["username"], v["password"], role)
+            )
+            if role == "Ιδιοκτήτης Κατοικίδιου":
+                uid = conn.execute("SELECT id FROM users WHERE username=?", (v["username"],)).fetchone()["id"]
+                conn.execute("INSERT INTO owners (user_id) VALUES (?)", (uid,))
+            elif role == "Κτηνίατρος":
+                uid = conn.execute("SELECT id FROM users WHERE username=?", (v["username"],)).fetchone()["id"]
+                conn.execute("INSERT INTO veterinarians (user_id) VALUES (?)", (uid,))
+            conn.commit()
+            conn.close()
+            messagebox.showinfo("Επιτυχία", "Ο λογαριασμός δημιουργήθηκε!")
+            self.root.destroy()
+        except Exception as e:
+            messagebox.showerror("Σφάλμα", str(e))
