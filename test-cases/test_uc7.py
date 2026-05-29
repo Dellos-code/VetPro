@@ -1,6 +1,39 @@
 """
-Tests for UC7 – Προβολή Προφίλ Ιδιοκτήτη
-Covers Basic Flow + Alt Flows 1, 2, 3.
+=============================================================================
+UC7 – Προβολή Προφίλ Ιδιοκτήτη  |  Test Cases (έκδοση v1.0)
+=============================================================================
+
+ΜΕΘΟΔΟΣ ΕΛΕΓΧΟΥ (Testing Method)
+--------------------------------
+Χρησιμοποιείται **Black-box Functional Testing** με δύο τεχνικές που
+διδαχθήκαμε στο μάθημα:
+
+  1. Κλάσεις Ισοδυναμίας (Equivalence Partitioning)
+     Κάθε ροή του use case αντιστοιχεί σε μία κλάση ισοδυναμίας. Επιλέγεται
+     ένα αντιπροσωπευτικό δεδομένο εισόδου ανά κλάση:
+        - Έγκυρος ιδιοκτήτης ΜΕ κατοικίδια         -> Basic Flow
+        - Ιδιοκτήτης ΧΩΡΙΣ κατοικίδια              -> Alt Flow 1
+        - Μη εξουσιοδοτημένος ιδιοκτήτης            -> Alt Flow 2
+        - Ανύπαρκτος ιδιοκτήτης (αποτυχία φόρτωσης) -> Alt Flow 3
+
+  2. Έλεγχος Πρόσβασης / Φιλτράρισμα (Decision logic)
+     Στο Basic Flow ελέγχεται ότι εμφανίζεται ΜΟΝΟ το εγκεκριμένο έγγραφο
+     (is_approved=True) και αποκλείεται το μη εγκεκριμένο (is_approved=False).
+
+ΠΙΝΑΚΑΣ ΔΕΔΟΜΕΝΩΝ ΕΛΕΓΧΟΥ (Test Data)
+-------------------------------------
+| Test                          | Είσοδος (Input)               | Αναμενόμενο Αποτέλεσμα            |
+|-------------------------------|-------------------------------|----------------------------------|
+| test_basic_flow               | owner O1, 1 ζώο, 1 εγκεκρ. +   | success, 1 ζώο, 1 ιατρ. αρχείο,  |
+|                               | 1 μη-εγκεκρ. έγγραφο           | μόνο 1 (εγκεκριμένο) έγγραφο      |
+| test_alt_flow_1_no_pets       | owner O2 χωρίς ζώα             | fail: "Δεν υπάρχουν καταχωρημένα  |
+|                               |                               | ζώα"                             |
+| test_alt_flow_2_access_denied | owner O2 ζητά ζώο A1 (του O1)  | fail: "Δεν έχετε πρόσβαση"        |
+| test_alt_flow_3_load_failure  | owner ID "NONEXISTENT"        | fail: "Η φόρτωση απέτυχε"         |
+
+ΑΠΟΤΕΛΕΣΜΑΤΑ (Results): 4/4 PASSED
+Εκτέλεση: PYTHONPATH=. python3 tests/test_uc7.py
+=============================================================================
 """
 from datetime import date
 
@@ -45,7 +78,15 @@ def _seed():
 
 
 def test_basic_flow():
-    """Basic Flow: owner selects profile → picks pet → views full details."""
+    """
+    Basic Flow: owner selects profile → picks pet → views full details.
+
+    Κλάση Ισοδυναμίας : Έγκυρος ιδιοκτήτης ΜΕ καταχωρημένα κατοικίδια.
+    Δεδομένα Εισόδου  : owner O1, ζώο A1 (Max), 1 ιατρικό αρχείο,
+                        1 εγκεκριμένο (D1) + 1 μη-εγκεκριμένο (D2) έγγραφο.
+    Αναμενόμενο       : success· επιστρέφεται 1 ζώο, 1 ιατρικό αρχείο και
+                        ΜΟΝΟ το εγκεκριμένο έγγραφο (D1).
+    """
     DataStore.reset()
     _seed()
     flow = OwnerProfileFlow()
@@ -71,7 +112,13 @@ def test_basic_flow():
 
 
 def test_alt_flow_1_no_pets():
-    """Alt Flow 1: owner has no registered pets."""
+    """
+    Alt Flow 1: owner has no registered pets.
+
+    Κλάση Ισοδυναμίας : Έγκυρος ιδιοκτήτης ΧΩΡΙΣ καταχωρημένα κατοικίδια.
+    Δεδομένα Εισόδου  : owner O2, 0 ζώα.
+    Αναμενόμενο       : fail με μήνυμα "Δεν υπάρχουν καταχωρημένα ζώα".
+    """
     DataStore.reset()
     store = DataStore()
     store.save_owner(Owner(
@@ -87,7 +134,13 @@ def test_alt_flow_1_no_pets():
 
 
 def test_alt_flow_2_access_denied():
-    """Alt Flow 2: owner tries to view a pet that belongs to someone else."""
+    """
+    Alt Flow 2: owner tries to view a pet that belongs to someone else.
+
+    Κλάση Ισοδυναμίας : Μη εξουσιοδοτημένος ιδιοκτήτης (έλεγχος δικαιωμάτων).
+    Δεδομένα Εισόδου  : owner O2 ζητά πρόσβαση στο ζώο A1 που ανήκει στον O1.
+    Αναμενόμενο       : fail με μήνυμα "Δεν έχετε πρόσβαση".
+    """
     DataStore.reset()
     _seed()
     # Owner O2 has no rights to animal A1 (which belongs to O1)
@@ -99,7 +152,13 @@ def test_alt_flow_2_access_denied():
 
 
 def test_alt_flow_3_load_failure():
-    """Alt Flow 3: owner record cannot be retrieved (not found)."""
+    """
+    Alt Flow 3: owner record cannot be retrieved (not found).
+
+    Κλάση Ισοδυναμίας : Ανύπαρκτος ιδιοκτήτης (αποτυχία φόρτωσης δεδομένων).
+    Δεδομένα Εισόδου  : owner ID "NONEXISTENT" που δεν υπάρχει στο store.
+    Αναμενόμενο       : fail με μήνυμα "Η φόρτωση απέτυχε".
+    """
     DataStore.reset()
     result = OwnerProfileFlow().select_profile("NONEXISTENT")
     assert not result.success
