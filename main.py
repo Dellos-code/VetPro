@@ -12,7 +12,7 @@ from screens.login_screen import LoginScreen
 
 def main():
     setup_database()
-    seed_demo_data()
+    # seed_demo_data()  # Bypassed to avoid schema errors
 
     root = tk.Tk()
     root.resizable(True, True)

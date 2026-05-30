@@ -20,7 +20,7 @@ from utils.ui_helpers import (COLORS, make_sidebar, make_main_frame,
 from logic.vaccine_saver   import VaccineSaver, AllergyChecker, HistoryManager
 from logic.admission_manager import AdmissionManager, DailyLogManager, DischargeManager
 from logic.report_generator  import ReportGenerator, DrugCatalog, TempList, ResultsAnalyzer
-from logic.inventory_manager import InventoryManager, ForecastEngine
+from logic.inventory_manager import InventoryRequestController, ForecastEngine
 from logic.appointment_service import AppointmentService
 
 class VetScreen:
@@ -508,7 +508,7 @@ class VetScreen:
                 conn.execute("INSERT INTO prescription_items (id,prescription_id,medication_id,quantity,dosage) VALUES (?,?,?,?,?)",
                              (str(uuid.uuid4()), pres_id, item["drug"]["id"], item["quantity"], item["dosage"]))
                 # InventoryManager.decreaseStock (Class Diagram)
-                try: InventoryManager().decreaseStock(item["drug"]["name"], item["quantity"])
+                try: InventoryRequestController().decreaseStock(item["drug"]["name"], item["quantity"])
                 except ValueError as e: messagebox.showwarning("Απόθεμα", str(e))
             conn.commit(); conn.close()
             # TempList.clearData (Class Diagram)
@@ -644,7 +644,7 @@ class VetScreen:
                 qty = int(qv.get()); assert qty > 0
             except: messagebox.showerror("Σφάλμα","Εισάγετε θετικό αριθμό."); return
             if not name: messagebox.showwarning("Ελλιπή","Επιλέξτε φάρμακο."); return
-            InventoryManager().updateStock(name, qty)
+            InventoryRequestController().updateStock(name, qty)
             messagebox.showinfo("Επιτυχία", f"Προστέθηκαν {qty} τεμάχια {name}.")
             self.show_stock()
 

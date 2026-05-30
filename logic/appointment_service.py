@@ -1,35 +1,51 @@
-"""
-AppointmentService (Class Diagram: Business Logic & Engines)
-+initiateSave(data: Object): void
-+insertAppointment(data: Object): void
-
-SchedulerEngine (implied by UC9 sequence diagram)
-- checkAvailability
-- conflict detection / preemption for urgent
-"""
-import uuid
+import sqlite3
 from database.db_setup import get_connection
 
-class AppointmentService:
-    def initiateSave(self, data: dict):
-        self.insertAppointment(data)
-
-    def insertAppointment(self, data: dict):
+# 1. Μηχανή Βελτιστοποίησης
+class OptimizationEngine:
+    def checkAvailability(self, date, time):
         conn = get_connection()
-        conflict = conn.execute(
-            "SELECT id FROM appointments WHERE vet_id=? AND appt_date=? AND time=? AND status='Scheduled'",
-            (data.get("vet_id"), data["appt_date"], data["time"])
-        ).fetchone()
-        if conflict and data.get("priority", 1) < 5:
+        if not conn: return False
+        try:
+            cursor = conn.cursor()
+            cursor.execute("SELECT id FROM appointments WHERE date = ? AND time = ?", (date, time))
+            conflict = cursor.fetchone()
+            return conflict is None  # True αν είναι ελεύθερο
+        except Exception as e:
+            print(f"DB Error: {e}")
+            return False
+        finally:
             conn.close()
-            raise ValueError("CONFLICT: Σύγκρουση ωρών. Επιλέξτε άλλη ώρα.")
-        if conflict and data.get("priority", 1) >= 5:
-            # Preemption for urgent (UC9 Alt Flow 2)
-            conn.execute("UPDATE appointments SET status='Rescheduled' WHERE id=?", (conflict["id"],))
-        conn.execute(
-            "INSERT INTO appointments (id,appt_date,time,reason,status,priority,animal_id,vet_id) VALUES (?,?,?,?,?,?,?,?)",
-            (str(uuid.uuid4()), data["appt_date"], data["time"], data["reason"],
-             "Scheduled", data.get("priority", 1), data["animal_id"], data.get("vet_id"))
-        )
-        conn.commit()
-        conn.close()
+
+# 2. Ελεγκτής Εγγραφής
+class SaveController:
+    def initiateSave(self, data):
+        conn = get_connection()
+        if not conn: return False
+        try:
+            cursor = conn.cursor()
+            cursor.execute(
+                "INSERT INTO appointments (owner_id, pet_id, date, time, reason) VALUES (?, ?, ?, ?, ?)",
+                (data['owner_id'], data['pet_id'], data['date'], data['time'], data['reason'])
+            )
+            conn.commit()
+            return True
+        except Exception as e:
+            print(f"DB Error: {e}")
+            return False
+        finally:
+            conn.close()
+
+# 3. Λήψη Αιτήματος (Κεντρικός Ελεγκτής)
+class AppointmentRequestController:
+    def __init__(self):
+        self.engine = OptimizationEngine()
+        self.save_ctrl = SaveController()
+
+    def submitAppointment(self, owner_id, pet_id, date, time, reason):
+        data = {'owner_id': owner_id, 'pet_id': pet_id, 'date': date, 'time': time, 'reason': reason}
+        
+        is_available = self.engine.checkAvailability(date, time)
+        if is_available:
+            return self.save_ctrl.initiateSave(data)
+        return False
