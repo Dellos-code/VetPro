@@ -6,7 +6,7 @@ UC3: Διαχείριση Εμβολιασμών  (VaccineSaver, AllergyChecker,
 UC4: Διαχείριση Νοσηλείας    (AdmissionManager, DailyLogManager, DischargeManager)
 UC5: Συνταγογράφηση           (DrugCatalog, TempList, PrescriptionForm logic)
 UC6: Αναφορές                 (ReportGenerator, MedHistory, FilterForm logic)
-UC10: Αποθέματα               (InventoryManager, ForecastEngine)
+UC10: Αποθέματα               (InventoryManager, PredictController)
 """
 import tkinter as tk
 from tkinter import ttk, messagebox
@@ -20,7 +20,7 @@ from utils.ui_helpers import (COLORS, make_sidebar, make_main_frame,
 from logic.vaccine_saver   import VaccineSaver, AllergyChecker, HistoryManager
 from logic.admission_manager import AdmissionManager, DailyLogManager, DischargeManager
 from logic.report_generator  import ReportGenerator, DrugCatalog, TempList, ResultsAnalyzer
-from logic.inventory_manager import InventoryRequestController, ForecastEngine
+from logic.inventory_manager import InventoryRequestController, PredictController
 from logic.appointment_service import AppointmentService
 
 class VetScreen:
@@ -57,8 +57,8 @@ class VetScreen:
         apt_count  = conn.execute("SELECT COUNT(*) FROM appointments WHERE appt_date=? AND status='Scheduled'",(today,)).fetchone()[0]
         hosp_count = conn.execute("SELECT COUNT(*) FROM hospitalizations WHERE status='Active'").fetchone()[0]
         conn.close()
-        # ForecastEngine.triggerForecast (Class Diagram)
-        low_stock_items = ForecastEngine().triggerForecast()
+        # PredictController.triggerForecast (Class Diagram)
+        low_stock_items = PredictController().triggerForecast()
         low_count = len(low_stock_items)
 
         tk.Label(self.main, text=f"Γεια σου, {self.vet_name}!",
@@ -508,7 +508,7 @@ class VetScreen:
                 conn.execute("INSERT INTO prescription_items (id,prescription_id,medication_id,quantity,dosage) VALUES (?,?,?,?,?)",
                              (str(uuid.uuid4()), pres_id, item["drug"]["id"], item["quantity"], item["dosage"]))
                 # InventoryManager.decreaseStock (Class Diagram)
-                try: InventoryRequestController().decreaseStock(item["drug"]["name"], item["quantity"])
+                try: InventoryRequestController().submitPrescriptionRequest(item["drug"]["name"], item["quantity"])
                 except ValueError as e: messagebox.showwarning("Απόθεμα", str(e))
             conn.commit(); conn.close()
             # TempList.clearData (Class Diagram)
@@ -591,7 +591,7 @@ class VetScreen:
                   bd=0, padx=8, pady=4, cursor="hand2").pack(side="left", padx=6)
 
     # ── UC10: Απόθεμα Φαρμάκων ───────────────────────────────────────────────
-    # Uses: InventoryManager, ForecastEngine (Class Diagram)
+    # Uses: InventoryManager, PredictController (Class Diagram)
     def show_stock(self):
         clear_frame(self.main)
         section_title(self.main, "📦 Διαχείριση Αποθέματος Φαρμάκων (UC10)")
@@ -600,8 +600,8 @@ class VetScreen:
         meds = conn.execute("SELECT * FROM medications ORDER BY name").fetchall()
         conn.close()
 
-        # ForecastEngine.triggerForecast (Class Diagram)
-        alerts = ForecastEngine().triggerForecast()
+        # PredictController.triggerForecast (Class Diagram)
+        alerts = PredictController().triggerForecast()
         if alerts:
             af = tk.Label(self.main,
                 text="⚠️ FORECAST ALERT: " + ", ".join(f"{a['name']} ({a['stock_level']})" for a in alerts),
@@ -644,7 +644,7 @@ class VetScreen:
                 qty = int(qv.get()); assert qty > 0
             except: messagebox.showerror("Σφάλμα","Εισάγετε θετικό αριθμό."); return
             if not name: messagebox.showwarning("Ελλιπή","Επιλέξτε φάρμακο."); return
-            InventoryRequestController().updateStock(name, qty)
+            InventoryRequestController().submitReplenishRequest(name, qty)
             messagebox.showinfo("Επιτυχία", f"Προστέθηκαν {qty} τεμάχια {name}.")
             self.show_stock()
 
