@@ -6,7 +6,7 @@ class NegativeLockEngine:
         conn = get_connection()
         try:
             cursor = conn.cursor()
-            cursor.execute("SELECT quantity FROM inventory WHERE item_name = ?", (item_name,))
+            cursor.execute("SELECT stock_level FROM medications WHERE name = ?", (item_name,))
             row = cursor.fetchone()
             if row and row[0] >= qty:
                 return True
@@ -20,7 +20,18 @@ class NegativeLockEngine:
 # 2. Ελεγκτής Πρόβλεψης
 class PredictController:
     def triggerForecast(self):
-        pass # Placeholder για μελλοντική AI πρόβλεψη
+        conn = get_connection()
+        try:
+            # Επιστρέφει πραγματική λίστα για να μην σκάει η len() στο UI
+            low = conn.execute(
+                "SELECT name, stock_level, min_threshold FROM medications WHERE stock_level <= min_threshold"
+            ).fetchall()
+            return [dict(m) for m in low]
+        except Exception as e:
+            print(f"DB Error: {e}")
+            return []
+        finally:
+            conn.close()
 
 # 3. Ελεγκτής Ενημέρωσης
 class UpdateController:
@@ -33,7 +44,7 @@ class UpdateController:
         try:
             cursor = conn.cursor()
             cursor.execute(
-                "UPDATE inventory SET quantity = quantity - ? WHERE item_name = ?",
+                "UPDATE medications SET stock_level = stock_level - ? WHERE name = ?",
                 (qty_to_remove, item_name)
             )
             conn.commit()
@@ -59,12 +70,11 @@ class InventoryRequestController:
             raise ValueError("Σφάλμα: Αρνητικό Απόθεμα!")
 
     def submitReplenishRequest(self, item_name, qty):
-        from database.db_setup import get_connection
         conn = get_connection()
         if not conn: return False
         try:
             cursor = conn.cursor()
-            cursor.execute("UPDATE inventory SET quantity = quantity + ? WHERE item_name = ?", (qty, item_name))
+            cursor.execute("UPDATE medications SET stock_level = stock_level + ? WHERE name = ?", (qty, item_name))
             conn.commit()
             return True
         except Exception as e:
