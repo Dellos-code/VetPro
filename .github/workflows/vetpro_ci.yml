@@ -1,0 +1,13 @@
+name: VetPro Quality Gate
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.12'
+      - name: Run Tests
+        run: python3 verify_stealth.py
