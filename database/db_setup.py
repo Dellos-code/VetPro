@@ -221,7 +221,7 @@ def seed_demo_data():
         ("adm-001","admin1","admin@vetpro.gr",  "Διαχειριστής",           "Admin VetPro",             "6900000000","1234"),
     ]
     for row in users:
-        c.execute("INSERT OR IGNORE INTO users (id,username,email,role,phone,password) VALUES (?,?,?,?,?,?)", row)
+        c.execute("INSERT OR IGNORE INTO users (id,username,email,role,fullname,phone,password) VALUES (?,?,?,?,?,?,?)", row)
 
     # Owner extras
     owners_extra = [
