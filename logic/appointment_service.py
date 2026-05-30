@@ -49,3 +49,6 @@ class AppointmentRequestController:
         if is_available:
             return self.save_ctrl.initiateSave(data)
         return False
+        
+        
+AppointmentService = AppointmentRequestController
